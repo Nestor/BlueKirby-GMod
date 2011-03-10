@@ -1,0 +1,72 @@
+@name Blue telekinesis
+@persist Vec:vector Ang:angle XFactor Sounds
+
+if(first()){ 
+    runOnTick(1)
+    owner():soundPlay(1,1,"buttons/blip1.wav")
+    hint("Press your use key while looking at an object to bring it to you.",15)
+    timer("First run",500)
+    #IF SOUNDS ARE 1 THEN THEY ARE ON
+    Sounds = 1
+    print(_HUD_PRINTCONSOLE," ---------------------")
+    print(_HUD_PRINTCONSOLE,"|   Blue telekenesis  |")
+    print(_HUD_PRINTCONSOLE,"| Made by: Blue Kirby |")
+    print(_HUD_PRINTCONSOLE," ---------------------")
+}
+
+if(clk("First run")){
+    owner():soundPlay(1,1,"buttons/blip1.wav")
+    hint("Press left mouse to fling the prop.",15)   
+    timer("First run2",400)
+}
+
+if(clk("First run2")){
+    owner():soundPlay(1,1,"buttons/blip1.wav")
+    if(Sounds){
+    hint("Sounds are on. If you would like to turn them off see line 9 & 10 of the E2.",15)
+    }else{
+    hint("Sounds are off. If you would like to turn them on see line 9 & 10 of the E2.",15)
+    }
+}
+
+if(owner():aimEntity() & owner():keyUse() & XFactor == 0 & owner():aimEntity() != entity()){
+    if(Sounds){
+        owner():soundPlay(1,1,"buttons/combine_button1.wav")
+    }
+    XFactor = 1
+    findClearWhiteList()
+    findByModel(owner():aimEntity():model())
+    findSortByDistance(owner():aimPos())
+}elseif(!owner():aimEntity() & owner():keyUse() & XFactor == 0 | find() & owner():keyUse() & XFactor == 0 | owner():aimEntity() == entity() & owner():keyUse() & XFactor == 0){
+    XFactor = 1
+    findClearWhiteList()
+    findByModel("")
+    if(Sounds){
+        owner():soundPlay(1,1,"buttons/combine_button2.wav")
+    }
+}elseif(owner():keyUse() == 0 & XFactor == 1 & !owner():keyAttack1()){
+    XFactor = 0
+}
+
+
+E = find()
+O = owner()
+Pos = O:pos() 
+Goto = O:pos() + vec(0,0,50) + owner():eye() * 100 
+Cur = E:pos() - E:up() * 20
+Vec = Goto-Cur 
+EA = E:angles()
+
+if(!XFactor & owner():keyAttack1() & find()){
+    if(Sounds){
+        owner():soundPlay(1,1,"physics/wood/wood_panel_impact_hard1.wav")
+    }
+    E:applyForce(find():pos() + owner():eye() * 1000 * E:mass() * 50 + owner():up() * 100 * E:mass() * 10)
+    XFactor = 1
+    findClearWhiteList()
+    findByModel("")
+}elseif(!owner():keyAttack1() & !owner():keyUse() & XFactor == 1){
+    XFactor = 0
+}
+E:applyForce((Vec + $Vec*10)*E:mass()*5)
+E:applyAngForce(ang(0,0,0) - EA)
