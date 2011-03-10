@@ -1,0 +1,68 @@
+@name Color changer
+@persist 
+
+runOnChat(1)
+
+LastSaid = owner():lastSaid():explode(" ")
+Red = LastSaid[2,string]:explode(",")
+Letters = "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"
+
+if(first() | duped()){
+    printColor(vec(255,150,50),"Look in console for the color format.")
+    timer("firstrun",50)
+}
+
+if(clk("firstrun")){   
+    print(_HUD_PRINTCONSOLE,"-Made by: Blue Kirby-")
+    print(_HUD_PRINTCONSOLE,"")
+    print(_HUD_PRINTCONSOLE,"Correct format, '!color 255,255,255'")
+    print(_HUD_PRINTCONSOLE,"Incorrect format, '!color 255 255 255'")
+    print(_HUD_PRINTCONSOLE,"255 is the maximum value for each color. 0 is the minmum.")
+    print(_HUD_PRINTCONSOLE,"'!color 255,255,255' is the default color, not white.")
+    print(_HUD_PRINTCONSOLE,"Example: !color 255,0,255")
+}
+
+if(chatClk(owner()) & (LastSaid[1,string]:lower() == "!color")){
+    timer("waitChat",50)
+}
+
+if(chatClk(owner()) & (LastSaid[1,string]:lower() == "!test")){
+    timer("waitTest",50)
+}
+
+if(clk("waitTest")){
+    if(LastSaid[2,string]:find(Letters)){
+        print("Invalid number")
+    }else{
+        print(LastSaid[2,string]:toNumber())
+    }
+}
+
+if(clk("waitChat")){
+    if(LastSaid[2,string]:find(Letters)){
+        printColor(vec(255,0,0),"Invalid color.")
+    }else{
+    R = Red[1,string]
+    G = Red[2,string]
+    B = Red[3,string]
+    if(R:toNumber() > 255){
+        R = "255"   
+    }
+    if(R:toNumber() < 0){
+        R = "0"   
+    }
+    if(G:toNumber() > 255){
+        G = "255"   
+    }
+    if(G:toNumber() < 0){
+        G = "0"   
+    }
+    if(B:toNumber() > 255){
+        B = "255"   
+    }
+    if(B:toNumber() < 0){
+        B = "0"   
+    }
+    owner():setColor(R:toNumber(),G:toNumber(),B:toNumber())
+    }
+}
