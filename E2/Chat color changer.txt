@@ -1,68 +1,72 @@
-@name Color changer
-@persist 
+@name Blue telekinesis
+@persist Vec:vector Ang:angle XFactor Sounds
 
-runOnChat(1)
-
-LastSaid = owner():lastSaid():explode(" ")
-Red = LastSaid[2,string]:explode(",")
-Letters = "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"
-
-if(first() | duped()){
-    printColor(vec(255,150,50),"Look in console for the color format.")
-    timer("firstrun",50)
+if(first()){ 
+    runOnTick(1)
+    owner():soundPlay(1,1,"buttons/blip1.wav")
+    hint("Press your use key while looking at an object to bring it to you.",15)
+    timer("First run",500)
+    #IF SOUNDS ARE 1 THEN THEY ARE ON
+    Sounds = 1
+    print(_HUD_PRINTCONSOLE," ---------------------")
+    print(_HUD_PRINTCONSOLE,"|   Blue telekenesis  |")
+    print(_HUD_PRINTCONSOLE,"| Made by: Blue Kirby |")
+    print(_HUD_PRINTCONSOLE," ---------------------")
 }
 
-if(clk("firstrun")){   
-    print(_HUD_PRINTCONSOLE,"-Made by: Blue Kirby-")
-    print(_HUD_PRINTCONSOLE,"")
-    print(_HUD_PRINTCONSOLE,"Correct format, '!color 255,255,255'")
-    print(_HUD_PRINTCONSOLE,"Incorrect format, '!color 255 255 255'")
-    print(_HUD_PRINTCONSOLE,"255 is the maximum value for each color. 0 is the minmum.")
-    print(_HUD_PRINTCONSOLE,"'!color 255,255,255' is the default color, not white.")
-    print(_HUD_PRINTCONSOLE,"Example: !color 255,0,255")
+if(clk("First run")){
+    owner():soundPlay(1,1,"buttons/blip1.wav")
+    hint("Press left mouse to fling the prop.",15)   
+    timer("First run2",400)
 }
 
-if(chatClk(owner()) & (LastSaid[1,string]:lower() == "!color")){
-    timer("waitChat",50)
-}
-
-if(chatClk(owner()) & (LastSaid[1,string]:lower() == "!test")){
-    timer("waitTest",50)
-}
-
-if(clk("waitTest")){
-    if(LastSaid[2,string]:find(Letters)){
-        print("Invalid number")
+if(clk("First run2")){
+    owner():soundPlay(1,1,"buttons/blip1.wav")
+    if(Sounds){
+    hint("Sounds are on. If you would like to turn them off see line 9 & 10 of the E2.",15)
     }else{
-        print(LastSaid[2,string]:toNumber())
+    hint("Sounds are off. If you would like to turn them on see line 9 & 10 of the E2.",15)
     }
 }
 
-if(clk("waitChat")){
-    if(LastSaid[2,string]:find(Letters)){
-        printColor(vec(255,0,0),"Invalid color.")
-    }else{
-    R = Red[1,string]
-    G = Red[2,string]
-    B = Red[3,string]
-    if(R:toNumber() > 255){
-        R = "255"   
+if(owner():aimEntity() & owner():keyUse() & XFactor == 0 & owner():aimEntity() != entity() & !find()){
+    if(Sounds){
+        owner():soundPlay(1,1,"buttons/combine_button1.wav")
     }
-    if(R:toNumber() < 0){
-        R = "0"   
+    XFactor = 1
+    findClearWhiteList()
+    findByModel(owner():aimEntity():model())
+    findSortByDistance(owner():aimPos())
+}elseif(!owner():aimEntity() & owner():keyUse() & XFactor == 0 & find():pos() | find():pos() & owner():keyUse() & XFactor == 0 | owner():aimEntity() == entity() & owner():keyUse() & XFactor == 0){
+    XFactor = 1
+    findClearWhiteList()
+    findByModel("")
+    if(Sounds){
+        owner():soundPlay(1,1,"buttons/combine_button2.wav")
     }
-    if(G:toNumber() > 255){
-        G = "255"   
-    }
-    if(G:toNumber() < 0){
-        G = "0"   
-    }
-    if(B:toNumber() > 255){
-        B = "255"   
-    }
-    if(B:toNumber() < 0){
-        B = "0"   
-    }
-    owner():setColor(R:toNumber(),G:toNumber(),B:toNumber())
-    }
+}elseif(owner():keyUse() == 0 & XFactor == 1 & !owner():keyAttack1()){
+    XFactor = 0
 }
+
+
+E = find()
+O = owner()
+Pos = O:pos() 
+Goto = O:pos() + vec(0,0,50) + owner():eye() * 100 
+Cur = E:pos() - E:up() * 20
+Vec = Goto-Cur 
+EA = E:angles()
+
+if(!XFactor & owner():keyAttack1() & find()){
+    if(Sounds){
+        owner():soundPlay(1,1,"physics/wood/wood_panel_impact_hard1.wav")
+    }
+    E:applyForce(find():pos() + owner():eye() * 1000 * E:mass() * 50 + owner():up() * 100 * E:mass() * 10)
+    XFactor = 1
+    findClearWhiteList()
+    findByModel("")
+}elseif(!owner():keyAttack1() & !owner():keyUse() & XFactor == 1){
+    XFactor = 0
+}
+E:applyForce((Vec + $Vec*10)*E:mass()*5)
+E:applyAngForce(ang(0,0,0) - EA)
