@@ -1,5 +1,0 @@
-1. Press F2 Once in game to enable developer console
-2. Copy and paste the following code: bind leftarrow "togglewalls";bind rightarrow "toggleaimbot";bind downarrow "togglerecoil"
-3. Click any game mode you like.
-4. Then press F4 then F5 and it will start a game.
-5. You will be host. Press 'N' to toggle crosshair, Press rightarrow key to toggle aimbot, Press left to toggle wall hacks, and press down to toggle no recoil.
