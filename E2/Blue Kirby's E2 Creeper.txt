@@ -1,0 +1,181 @@
+@name Creeper
+@persist BackWardSmoother FootAng:angle FootSmoother Random Smoother AngSmoother:angle TestAng ModelMode FeetAnimate FootToAnimate:string
+
+runOnTick(1)
+if(first()){
+    
+    #if(!isSinglePlayer()){
+    #    if(owner():steamID() != "STEAM_0:0:19548492"){
+    #        selfDestruct()   
+    #    }    
+    #}else{
+    #    if(owner():name() != "[S3G] Blue Kirby"){
+    #        selfDestruct()   
+    #    } 
+    #}
+    
+    #entity():setAlpha(0)
+    
+    #body
+    holoCreate(1)
+    
+    holoScale(1,vec(2.5,2.5,6))
+    holoPos(1,entity():pos() + vec(0,0,53))
+    holoColor(1,vec(50,120,0))
+    
+    #eyes
+    holoCreate(2)
+    holoCreate(3)
+    
+    holoScale(2,vec(0.01,0.6,0.6))
+    holoPos(2,entity():pos() + vec(15.1,8,78))
+    holoColor(2,vec(0,0,0))
+    
+    holoScale(3,vec(0.01,0.6,0.6))
+    holoPos(3,entity():pos() + vec(15.1,-8,78))
+    holoColor(3,vec(0,0,0))
+    
+    #mouth
+    holoCreate(4)
+    holoCreate(5)
+    holoCreate(6)
+    
+    holoScale(4,vec(0.01,0.75,1))
+    holoColor(4,vec(0,0,0))
+    holoPos(4,entity():pos() + vec(15.1,0,68.5))
+    
+    holoScale(5,vec(0.01,0.35,1))
+    holoColor(5,vec(0,0,0))
+    holoPos(5,entity():pos() + vec(15.1,-6.2,65))
+    
+    holoScale(6,vec(0.01,0.35,1))
+    holoColor(6,vec(0,0,0))
+    holoPos(6,entity():pos() + vec(15.1,6.2,65))
+    timer("random Ang",1000)
+    
+    #feet
+    for(I=7,10){
+        holoCreate(I)
+        holoColor(I,vec(50,120,0))
+        holoScale(I,vec(1.5,1.5,1.5))
+    }
+    holoPos(7,entity():pos() + vec(12,-12,8))
+    holoPos(8,entity():pos() + vec(12,12,8))
+    holoPos(9,entity():pos() + vec(-12,-12,8))
+    holoPos(10,entity():pos() + vec(-12,12,8))
+    
+    #parenting
+    for(I=2,10){
+        holoParent(I,1)   
+    }
+    
+    Smoother = 10
+    FootSmoother = 4
+    BackWardSmoother = 3
+    
+    ModelMode = 0
+    
+    FeetAnimate = 0
+    FootAng = ang(holoEntity(1):angles():pitch() + 40,holoEntity(1):angles():yaw(),holoEntity(1):angles():roll())
+    
+    FootToAnimate = "Left"
+    
+    rangerFilter(entity())
+    Ranger = rangerOffset(500, holoEntity(1):pos(), holoEntity(1):forward())
+}
+
+rangerFilter(entity())
+Ranger = rangerOffset(100, holoEntity(1):pos(), holoEntity(1):forward())
+
+
+if(clk("random Ang") & ModelMode == 0 & holoEntity(1):pos() != Ranger:pos()){
+    if(round(random(1)) == 1 & holoEntity(1):pos() != Ranger:pos()){
+        TestAng = random(20)
+    }elseif(holoEntity(1):pos() != Ranger:pos()){
+        TestAng = -random(20)
+    }else{
+        TestAng = -holoEntity(1):angles():yaw()
+    }
+    AngSmoother = ang(0,TestAng,0)
+    if(round(random(3)) <= 1){
+    holoAng(1,holoEntity(1):angles() + AngSmoother / Smoother)
+    timer("Smoother",100)
+    }
+    if(round(random(5)) >= 1){
+        Random = 1
+        timer("RandomReset",random(10)*1000)
+    }
+    timer("random Ang",random(7)*1000)
+}
+
+if(clk("RandomReset") & ModelMode == 0){
+    Random = 0   
+}
+if(Random == 1 & ModelMode == 0 & holoEntity(1):pos() != Ranger:pos()){
+    holoPos(1,holoEntity(1):pos() + (holoEntity(1):forward()) * 2)
+    FeetAnimate = 1
+}else{
+    FeetAnimate = 0
+}
+
+if(holoEntity(1):pos() == Ranger:pos()){
+    holoEntity(1):forward()
+    holoEntity(1):angles():yaw() == -holoEntity(1):angles():yaw()
+}
+
+if(clk("Smoother") & ModelMode == 0){
+    Smoother--
+    if(Smoother > 1){
+        timer("Smoother",50)
+        Smoother = round(random(3)) + 5  
+        holoAng(1,holoEntity(1):angles() + AngSmoother / Smoother)
+    } 
+}
+
+if(FeetAnimate == 1){
+    timer("AnimateFeet",100)
+    timer("SmoothFeet",100)
+}else{
+for(I=7,10){
+        holoAng(I,holoEntity(1):angles())
+    }
+}
+
+if(clk("AnimateFeet") & FeetAnimate){
+    if(FootToAnimate == "Left"){
+        holoAng(7,ang(holoEntity(8):angles():pitch() - 40 / FootSmoother,holoEntity(8):angles():yaw(),holoEntity(8):angles():roll()))
+        holoAng(9,ang(holoEntity(10):angles():pitch() + 40 / FootSmoother,holoEntity(10):angles():yaw(),holoEntity(10):angles():roll()))
+        holoAng(8,ang(holoEntity(7):angles():pitch() + 40 / FootSmoother,holoEntity(7):angles():yaw(),holoEntity(7):angles():roll()))
+        holoAng(10,ang(holoEntity(9):angles():pitch() - 40 / FootSmoother,holoEntity(9):angles():yaw(),holoEntity(9):angles():roll()))
+    }else{
+        holoAng(8,ang(holoEntity(7):angles():pitch() - 40 / FootSmoother,holoEntity(7):angles():yaw(),holoEntity(7):angles():roll()))
+        holoAng(10,ang(holoEntity(9):angles():pitch() + 40 / FootSmoother,holoEntity(9):angles():yaw(),holoEntity(9):angles():roll()))
+        holoAng(7,ang(holoEntity(8):angles():pitch() + 40 / FootSmoother,holoEntity(8):angles():yaw(),holoEntity(8):angles():roll()))
+        holoAng(9,ang(holoEntity(10):angles():pitch() - 40 / FootSmoother,holoEntity(10):angles():yaw(),holoEntity(10):angles():roll()))
+    }
+    timer("AnimateFeet",100)
+    timer("SmoothFeet",100)
+}elseif(!FeetAnimate){
+    for(I=7,10){
+        holoAng(I,holoEntity(1):angles())   
+    }
+    FootToAnimate = "Left"
+}
+
+if(clk("SmoothFeet") & FeetAnimate){
+    if(FootToAnimate == "Left" & FootSmoother < 1){
+        FootSmoother = 4
+        BackWardSmoother = 3
+        FootToAnimate = "Right"
+    }elseif(FootToAnimate == "Right" & FootSmoother < 1){
+        FootSmoother = 4
+        BackWardSmoother = 3
+        FootToAnimate = "Left"
+    }
+    FootSmoother--
+    BackWardSmoother--
+}elseif(!FeetAnimate){
+    for(I=7,10){
+        holoAng(I,holoEntity(1):angles())  
+    }
+}
