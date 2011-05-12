@@ -1,3 +1,4 @@
+#Copyrights to Blue Kirby. Do not distribute or claim code.
 @name Creeper
 @persist BackWardSmoother FootAng:angle FootSmoother Random Smoother AngSmoother:angle TestAng ModelMode FeetAnimate FootToAnimate:string
 
