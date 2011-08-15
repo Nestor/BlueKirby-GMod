@@ -3,8 +3,8 @@ include( 'shared.lua' )
 include( 'player.lua' )
 include( 'npc.lua' )
 --I'm a n00b so I is cewter with no skillz.
-//WarmUpTime = CreateConVar( "bw_warmup_time", "30", {SERVER_CAN_EXECUTE} )
-//WarmUpTimeA = WarmUpTime:GetInt()
+WarmUpTime = CreateConVar( "bw_warmup_time", "30", {SERVER_CAN_EXECUTE} )
+WarmUpTimeA = WarmUpTime:GetInt()
 
 /*---------------------------------------------------------
    Name: gamemode:Initialize( )

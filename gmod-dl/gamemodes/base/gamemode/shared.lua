@@ -16,10 +16,10 @@ include( 'gravitygun.lua' )
 include( 'player_shd.lua' )
 include( 'animations.lua' )
 
-GM.Name 		= "Base Gamemode"
-GM.Author 		= "Garry Newman"
-GM.Email 		= "garrynewman@gmail.com"
-GM.Website 		= "www.garry.tv"
+GM.Name 		= "Blue Waves"
+GM.Author 		= "Blue Kirby"
+GM.Email 		= "bluekirby51@gmail.com"
+GM.Website 		= "www.s3g.brainnerd.com"
 GM.TeamBased 	= false
 
 

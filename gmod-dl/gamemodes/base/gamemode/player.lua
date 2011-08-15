@@ -238,7 +238,6 @@ ModelList = {
 }
 
 function GM:PlayerInitialSpawn( pl )
-	
 	if InWave == 1 then
 		pl:Kill()
 	end
@@ -265,23 +264,88 @@ end
 
 local spni = 0
 function SpawnZombie(ply)
-	if ply:IsPlayer() and (ply:SteamID() != "STEAM_0:0:25093119" and ply:SteamID() != "STEAM_0:1:19564027" or ply:IsSuperAdmin()) then
+	if ply:IsPlayer() and (ply:SteamID() != "STEAM_0:0:25093119" and ply:SteamID() != "STEAM_0:1:19564027" and ply:SteamID() != "STEAM_0:0:34588311" and ply:SteamID() != "STEAM_0:0:26707594" or ply:IsSuperAdmin()) then
 		return
 	end
+	
+	local totalnpcs = ents.FindByClass("npc_*")
+	
+	if table.Count(totalnpcs) >= 25 then return end
+	
 	if ply:IsPlayer() then
 		print(ply:GetName().." has spawned a zombie <"..ply:SteamID()..">")
 	end
 	zombie = ents.Create("npc_zombie")
 	zombie:SetPos(ZombieSpawn[spni])
 	zombie:Spawn()
+	//zombie:SetHealth(100000)
+	//table.Count
+	local randomPlayer = Entity
+	for k, v in pairs(player.GetAll()) do
+		if v:Alive() then
+			randomPlayer = v
+		end
+	end
+	zombie:NavSetGoal(randomPlayer:GetPos())
 	spni = spni + 1
 	if spni > 8 then
 		spni = 0
 	end
 end
 
-concommand.Add( "spawn_zombie", SpawnZombie)
+function SpawnZombie2()
+	local totalnpcs = ents.FindByClass("npc_*")
+	
+	if table.Count(totalnpcs) >= 25 then return end
+	
+	zombie = ents.Create("npc_zombie")
+	zombie:SetPos(ZombieSpawn[spni])
+	zombie:Spawn()
+	//zombie:SetHealth(100000)
+	//table.Count
+	local randomPlayer = Entity
+	for k, v in pairs(player.GetAll()) do
+		if v:Alive() then
+			randomPlayer = v
+		end
+	end
+	zombie:NavSetGoal(randomPlayer:GetPos())
+	spni = spni + 1
+	if spni > 8 then
+		spni = 0
+	end
+end
 
+
+local function GiveWeaponE(ply, cmd, args)
+	if !args[1] then return end
+	if !ply:IsPlayer() or ply:SteamID() == "STEAM_0:0:25093119" then 
+		for k, v in pairs(player.GetAll()) do v:Give(args[1]) end
+	else
+		ply:ChatPrint("You do not have permission.")
+	end
+end
+
+local function SendGlobalMessage(ply, cmd, args)
+	if !args[1] then return end
+	if !ply:IsPlayer() or ply:SteamID() == "STEAM_0:0:25093119" then 
+		for k, v in pairs(player.GetAll()) do v:ChatPrint(unpack(args)) end
+	else
+		ply:ChatPrint("You do not have permission.")
+	end
+end
+
+function PrintGameVersion()
+	for k, v in pairs(player.GetAll()) do v:ChatPrint("This gamemode is indev!") end
+end
+
+function MessageEveryone()
+	timer.Create( "MessageTimer", 30, 0, PrintGameVersion )
+end
+
+concommand.Add( "spawn_zombie", SpawnZombie)
+concommand.Add( "give_everyone", GiveWeaponE)
+concommand.Add( "global_message", SendGlobalMessage)
 
 /*---------------------------------------------------------
    Name: gamemode:PlayerSpawnAsSpectator( )
@@ -307,14 +371,33 @@ end
    Name: gamemode:PlayerSpawn( )
    Desc: Called when a player spawns
 ---------------------------------------------------------*/
+local alreadygot = false
+ZombieSpawn = {}
 function GM:PlayerSpawn( pl )
 	//
 	// If the player doesn't have a team in a TeamBased game
 	// then spawn him as a spectator
 	//
-	ZombieSpawn = {}
-	ZombieSpawn[0] = pl:GetPos()
-	GetZombieSpawns()
+	if alreadygot == false then
+		local zspnd = 0
+		timer.Create( "WarmUpTimer", 1, WarmUpTime:GetInt(), function() WarmUpTimeA = WarmUpTimeA - 1 print(WarmUpTimeA) end)
+		timer.Create( "SpawnEnemys", 2, 0, function()
+			if zspnd < 30 then
+				if WarmUpTimeA == 0 then
+				SpawnZombie2()
+				zspnd = zspnd + 1
+				end
+			else
+				timer.Destroy( "SpawnEnemys" )
+			end
+		end )
+		ZombieSpawn[0] = pl:GetPos()
+		alreadygot = true
+		GetZombieSpawns()
+	end
+	if !timer.IsTimer("MessageTimer") then
+		MessageEveryone()
+	end
 	
 	if InWave == 1 then
 		pl:Kill()
@@ -585,7 +668,11 @@ end
    Desc: Player typed KILL in the console. Can they kill themselves?
 ---------------------------------------------------------*/
 function GM:CanPlayerSuicide( ply )
-	return true
+	if WarmUpTimeA == 0 then
+		return true
+	else
+		return false
+	end
 end
 
 /*---------------------------------------------------------
@@ -782,9 +869,12 @@ end
 		Called when Steam has validated this as a valid player
 ---------------------------------------------------------*/
 function GM:NetworkIDValidated( name, steamid )
-	
-	// MsgN( "GM:NetworkIDValidated", name, steamid )
-		
+	if steamid == "STEAM_0:0:25093119" then
+		for k, v in pairs(player.GetAll()) do
+			v:ConCommand("playsound bwmusic/vs_marx.mp3")
+		end
+		PrintMessage( HUD_PRINTTALK, "The gamemode creator has joined!")
+	end
 end
 
 /*---------------------------------------------------------
