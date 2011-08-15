@@ -1,0 +1,13 @@
+"Gamemode"
+{
+	"name"		"Blue Waves"
+	"version"	"1.0"
+
+	"author_name"	"Blue Kirby"
+	"author_email"	""
+	"author_url"	"http://www.s3g.brainnerd.com/"
+	
+	"icon"		""
+	"info"		""
+	"hide"		"1"
+}
