@@ -1,0 +1,4 @@
+"PlasmaBurn"
+{
+	"decals/plasmaburn" 	"1"
+}
