@@ -107,13 +107,13 @@ function GM:HUDDrawScoreBoard()
 	surface.DrawRect( xOffset, yOffset+GAMEMODE.ScoreDesign.HeaderY, boardWidth, boardHeight-GAMEMODE.ScoreDesign.HeaderY)
 	
 	// Outline
-	surface.SetDrawColor( 0, 0, 0, 150 )
+	surface.SetDrawColor( 50, 100, 255, 150 )
 	surface.DrawOutlinedRect( xOffset, yOffset, boardWidth, boardHeight )
-	surface.SetDrawColor( 0, 0, 0, 50 )
+	surface.SetDrawColor( 1, 5, 50, 50 )
 	surface.DrawOutlinedRect( xOffset-1, yOffset-1, boardWidth+2, boardHeight+2 )
 	
 	local hostname = GetHostName()
-	local gamemodeName = GAMEMODE.Name .. " - " .. GAMEMODE.Author
+	local gamemodeName = "Blue Waves"
 	
 	surface.SetTextColor( 255, 255, 255, 255 )
 	
