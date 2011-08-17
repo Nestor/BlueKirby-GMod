@@ -38,10 +38,55 @@ end
    Name: gamemode:KeyPress( )
    Desc: Player pressed a key (see IN enums)
 ---------------------------------------------------------*/
+local Attack2 = 0
+local Use = 0
+local PlayerID = 1
 function GM:KeyPress( player, key )
-	if key == KEY_F4 then
-		print("Player "..player:Nick().." has pressed F4.")
+	if key == IN_ATTACK and !player:Alive() then
+		PlayerID = PlayerID + 1
+		if PlayerID > Players then
+			PlayerID = 1
+			if PlayerIDS[PlayerID] == player then
+				PlayerID = PlayerID + 1
+			end
+			player:SpectateEntity(PlayerIDS[PlayerID])
+		else
+			if PlayerIDS[PlayerID] == player then
+				PlayerID = PlayerID + 1
+				if PlayerID > Players then
+					PlayerID = 1
+				end
+			end
+			player:SpectateEntity(PlayerIDS[PlayerID])
+		end
 	end
+	
+	if key == IN_ATTACK2 and !player:Alive() then
+		PlayerID = PlayerID - 1
+		if PlayerID < 1 then
+			PlayerID = Players
+			if PlayerIDS[PlayerID] == player then
+				PlayerID = PlayerID - 1
+			end
+			player:SpectateEntity(PlayerIDS[PlayerID])
+		else
+			if PlayerIDS[PlayerID] == player then
+				PlayerID = PlayerID - 1
+				if PlayerID < 1 then
+					PlayerID = Players
+				end
+			end
+			player:SpectateEntity(PlayerIDS[PlayerID])
+		end
+	end
+
+    if key == IN_RELOAD and player:GetNWBool("FirstPersonSpec") == false and !player:Alive() then 
+        player:SetNWBool("FirstPersonSpec", true)
+		player:Spectate( OBS_MODE_IN_EYE )		 
+    elseif key == IN_RELOAD and player:GetNWBool("FirstPersonSpec") == true and !player:Alive() then 
+        player:SetNWBool("FirstPersonSpec", false)
+		player:Spectate( OBS_MODE_CHASE )
+    end
 end
 
 
@@ -50,6 +95,12 @@ end
    Desc: Player released a key (see IN enums)
 ---------------------------------------------------------*/
 function GM:KeyRelease( player, key )
+	if key == IN_ATTACK2  then
+		Attack2 = 0
+	end
+	if key == IN_USE  then
+		Use = 0
+	end
 end
 
 
