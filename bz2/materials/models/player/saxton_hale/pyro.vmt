@@ -1,4 +1,5 @@
-"UnLitGeneric"
+"UnlitGeneric"
 {
-	"$basetexture" "models/player/pyro/pyro_red"
+	"$basetexture" "models/player/saxton_hale/pyro"
 }
+
