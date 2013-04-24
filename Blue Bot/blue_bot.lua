@@ -22,7 +22,7 @@ I'll be updating this regularly and it's pretty modular so feel free to add onto
 Please don't reupload any shitty variation of the hack you make.
 
 NOTICE: If you take code from this, add credits for Blue Kirby please. THANK YAWWW
-Official Blue Bot thread: ]]
+Official Blue Bot thread: http://www.mpgh.net/forum/713-garrys-mod-hacks-cheats/653677-blue-bot-lua-hack.html]]
 
 local BB = { };
 
@@ -458,6 +458,83 @@ function BB.AddHook( hookname, name, func )
 	hook.Add( hookname, name, func );
 end
 
+function BB.Menu( )
+	local Panel = vgui.Create( "DFrame" );
+	Panel:SetSize( 500, 300 );
+	Panel:SetPos( ScrW()/2-Panel:GetWide()/2, ScrH()/2-Panel:GetTall()/2 );
+	Panel:SetTitle( "Blue Bot" );
+	Panel:MakePopup();
+	
+	local Label = vgui.Create( "DLabel", Panel );
+	Label:SetPos( 25, 50 );
+	Label:SetColor( Color( 255, 255, 255, 255 ) );
+	Label:SetText( "Settings" );
+	Label:SizeToContents();
+	
+	local Label = vgui.Create( "DLabel", Panel );
+	Label:SetPos( 275, 50 );
+	Label:SetColor( Color( 255, 255, 255, 255 ) );
+	Label:SetText( "More coming soon" );
+	Label:SizeToContents();
+	
+	local List = vgui.Create( "DPanelList", Panel );
+	List:SetPos( 25, 65 );
+	List:SetSize( 200, 200 );
+	List:SetSpacing( 5 );
+	List:EnableHorizontal( false );
+	List:EnableVerticalScrollbar( true );
+	List:SetPadding(5);
+	function List:Paint()
+		draw.RoundedBox( 4, 0, 0, List:GetWide(), List:GetTall(), Color( 0, 0, 0, 150 ) );
+	end
+	
+	local CheckBox = vgui.Create( "DCheckBoxLabel" );
+    CheckBox:SetText( "Aimbot Enabled" );
+    CheckBox:SetConVar( BB.RandomPrefix.."_aimbot_enabled" );
+    CheckBox:SetValue( BB.AimbotEnabled:GetBool() );
+    CheckBox:SizeToContents();
+	List:AddItem( CheckBox );
+	
+	CheckBox = vgui.Create( "DCheckBoxLabel" );
+    CheckBox:SetText( "Friendly Fire" );
+    CheckBox:SetConVar( BB.RandomPrefix.."_aimbot_friendly_fire" );
+    CheckBox:SetValue( BB.FriendlyFire:GetBool() );
+    CheckBox:SizeToContents();
+	List:AddItem( CheckBox );
+	
+	CheckBox = vgui.Create( "DCheckBoxLabel" );
+    CheckBox:SetText( "ESP Enabled" );
+    CheckBox:SetConVar( BB.RandomPrefix.."_esp_enabled" );
+    CheckBox:SetValue( BB.ESPEnabled:GetBool() );
+    CheckBox:SizeToContents();
+	List:AddItem( CheckBox );
+	
+	CheckBox = vgui.Create( "DCheckBoxLabel" );
+    CheckBox:SetText( "Chams Enabled" );
+    CheckBox:SetConVar( BB.RandomPrefix.."_chams_enabled" );
+    CheckBox:SetValue( BB.ChamsEnabled:GetBool() );
+    CheckBox:SizeToContents();
+	List:AddItem( CheckBox );
+	
+	CheckBox = vgui.Create( "DCheckBoxLabel" );
+    CheckBox:SetText( "Crosshair Enabled" );
+    CheckBox:SetConVar( BB.RandomPrefix.."_crosshair_enabled" );
+    CheckBox:SetValue( BB.CrosshairEnabled:GetBool() );
+    CheckBox:SizeToContents();
+	List:AddItem( CheckBox );
+	
+	List = vgui.Create( "DPanelList", Panel );
+	List:SetPos( 275, 65 );
+	List:SetSize( 200, 200 );
+	List:SetSpacing( 5 );
+	List:EnableHorizontal( false );
+	List:EnableVerticalScrollbar( true );
+	List:SetPadding( 5 );
+	function List:Paint()
+		draw.RoundedBox( 4, 0, 0, List:GetWide(), List:GetTall(), Color( 0, 0, 0, 150 ) );
+	end
+end
+
 BB.Init();
 
 BB.AddHook( "RenderScreenspaceEffects" , BB.RandomString( 0, true, true ), BB.Chams );
@@ -475,3 +552,5 @@ concommand.Add( BB.RandomPrefix.."_unload", function( ply, cmd, args )
 	concommand.Remove( BB.RandomPrefix.."_unload" )
 	BB.Print( Color( 255, 255, 255 ), "Unloaded successfully!" );
 end );
+
+concommand.Add( BB.RandomPrefix.."_menu", BB.Menu );
