@@ -1,6 +1,0 @@
-1.0.0
-Initial release
-
-0.5.0
-Added updating capabilities
-Created new graphics

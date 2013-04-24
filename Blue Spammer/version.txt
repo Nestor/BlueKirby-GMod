@@ -1,2 +1,0 @@
-[CURRENT]1.0.0
-[DOWNLOAD]http://bluekirbygmod.googlecode.com/svn/trunk/Donations/Blue%20Kirby.txt
