@@ -1,4 +1,4 @@
---[[BBVERSION=061
+--[[BBVERSION=062
 Made by:
  .  ....................................................................................................................
 ..MMMMMMMM8....,MM~........MMM.....NMM...MMMMMMMMMM........NMM.....MMMO..MMZ..MMMMMMMMM7....MMMMMMMMM...,MMM......MMM...
@@ -56,9 +56,9 @@ BB.MetaConVar = FindMetaTable( "ConVar" );
 BB.CreateClientConVar = CreateClientConVar;
 function BB.MetaConVar:OnMenu() return false; end
 
-local function CreateClientConVar( name, default, save, onmenu )
-	BB.CreateClientConVar( name, default, save, false );
-	return {cvar = GetConVar( name ), OnMenu = onmenu};
+local function CreateClientConVar( cvarname, default, save, onmenu )
+	BB.CreateClientConVar( cvarname, default, save, false );
+	return {cvar = GetConVar( cvarname ), OnMenu = onmenu, name = cvarname};
 end
 
 BB.RandomPrefix = BB.CustomPrefix or BB.RandomString( math.random( 5, 8 ), false );
@@ -72,8 +72,10 @@ BB.Target = nil;
 BB.ShouldReturn = false;
 BB.CVARS = {Bools = { }, Numbers = { }};
 BB.CVARS.Bools["Aimbot"] = CreateClientConVar( BB.RandomPrefix.."_aimbot_enabled", "0", true, true );
+BB.CVARS.Bools["Aim on mouse1"] = CreateClientConVar( BB.RandomPrefix.."_aim_on_mouse", "1", true, true );
 BB.CVARS.Numbers["Max Angle"] = CreateClientConVar( BB.RandomPrefix.."_aimbot_max_angle", "30", true, true );
-BB.CVARS.Bools["Aim at friends"] = CreateClientConVar( BB.RandomPrefix.."_aimbot_friendly_fire", "1", true, true );
+BB.CVARS.Bools["Aim at team mates"] = CreateClientConVar( BB.RandomPrefix.."_aimbot_friendly_fire", "1", true, true );
+BB.CVARS.Bools["Aim at steam friends"] = CreateClientConVar( BB.RandomPrefix.."_aimbot_steam_friends", "0", true, true );
 BB.CVARS.Bools["ESP"] = CreateClientConVar( BB.RandomPrefix.."_esp_enabled", "1", true, true );
 BB.CVARS.Bools["Chams"] = CreateClientConVar( BB.RandomPrefix.."_chams_enabled", "1", true, true );
 BB.CVARS.Bools["Crosshair"] = CreateClientConVar( BB.RandomPrefix.."_crosshair_enabled", "1", true, true );
@@ -85,8 +87,8 @@ BB.IsTraitor = nil;
 BB.IsTTT = false;
 BB.PrintEx = MsgC;
 BB.LatestVersion = nil;
-BB.Version = "0.6.1";
-BB.V = 61; --DO NOT EDIT THIS
+BB.Version = "0.6.2";
+BB.V = 62; --DO NOT EDIT THIS
 
 function BB.Init( )
 	--Eww this is ugly
@@ -185,7 +187,8 @@ function BB.GetValidPlayers( )
 		ply:IsPlayer() && 
 		ply:Alive() && 
 		ply:Health() >= 1 &&
-		( !BB.IsOnTeam( ply ) || BB.CVARS.Bools["Aim at friends"].cvar:GetBool() ) ) then
+		( ply:GetFriendStatus() != "friend" || BB.CVARS.Bools["Aim at steam friends"].cvar:GetBool() ) &&
+		( !BB.IsOnTeam( ply ) || BB.CVARS.Bools["Aim at team mates"].cvar:GetBool() ) ) then
 			table.insert( players, ply );
 		end
 	end
@@ -235,7 +238,7 @@ function BB.VelocityPrediction( ply ) return ply:GetAbsVelocity() * 0.012; end
 function BB.Aimbot( )
 	BB.HeadPos = nil;
 	
-	if (!BB.CVARS.Bools["Aimbot"].cvar:GetBool() || BB.ShouldReturn) then return end
+	if (!BB.CVARS.Bools["Aimbot"].cvar:GetBool() || BB.ShouldReturn && BB.CVARS.Bools["Aim on mouse1"].cvar:GetBool() == true) then return end
 	
 	local players = {};
 	
@@ -256,6 +259,7 @@ function BB.Aimbot( )
 end
 
 function BB.TableSortByDistance( former, latter ) return latter:GetPos():Distance( BB.ply():GetPos() ) > former:GetPos():Distance( BB.ply():GetPos() ) end
+function BB.TableSortByAsc( former, latter ) print( "hey" ) return string.byte( string.lower( former.name ), 1 ) < string.byte( string.lower( latter.name ), 1 ) end
 
 function BB.GetPlayersByDistance( )
 	local players = BB.players( );
@@ -270,10 +274,10 @@ function BB.CreateMove( cmd )
 		BB.ply().voice_battery = 100; --Infinite voichat time I don't need to check if it's TTT because swag
 	end
 	
-	if (cmd:KeyDown( IN_ATTACK ) && BB.ShouldReturn ) then
+	if (cmd:KeyDown( IN_ATTACK ) && BB.ShouldReturn && BB.CVARS.Bools["Aim on mouse1"].cvar:GetBool() == true ) then
 		BB.ShouldReturn = false;
 		BB.Aimbot( );
-	elseif ( !cmd:KeyDown( IN_ATTACK ) && !BB.ShouldReturn ) then
+	elseif ( !cmd:KeyDown( IN_ATTACK ) && !BB.ShouldReturn && BB.CVARS.Bools["Aim on mouse1"].cvar:GetBool() == true ) then
 		BB.ShouldReturn = true;
 	end
 	
@@ -535,6 +539,8 @@ function BB.Menu( )
 		draw.RoundedBox( 4, 0, 0, List:GetWide(), List:GetTall(), Color( 0, 0, 0, 150 ) );
 	end
 	
+	table.sort( BB.CVARS.Bools, BB.TableSortByAsc );
+	
 	for name, base in pairs(BB.CVARS.Bools) do
 		if (base.OnMenu) then
 			local CheckBox = vgui.Create( "DCheckBoxLabel" );
@@ -611,6 +617,7 @@ concommand.Add( BB.RandomPrefix.."_unload", function( ply, cmd, args )
 		BB.Print( true, true, Color( 255, 255, 255 ), "Unhooked "..BB.RandomHooks.hook[i].." using name "..BB.RandomHooks.name[i] );
 	end
 	concommand.Remove( BB.RandomPrefix.."_unload" )
+	concommand.Remove( BB.RandomPrefix.."_menu" )
 	BB.Print( true, true, Color( 255, 255, 255 ), "Unloaded successfully!" );
 end );
 
