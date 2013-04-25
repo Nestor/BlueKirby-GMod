@@ -1,28 +1,22 @@
 --[[
 Made by:
-....           ....... .............  ........... ....  ................           .................................................             ...........       .................................. ..
-...=MMMMMMMMMMMMO..... ...IMMMM:....  .......=MMMM,... ....NMMMM....=MMMMMMMMMMMMMMMMN.............NMMMD........=MMMMM8..:MMMM=...~MMMMMMMMMMMMM.........:MMMMMMMMMMMMM.......7MMMMM..........NNMMM7....
-...+MMMMMMMMMMMMMMMZ......7MMMM,.............?MMMM.........NMMMN....=MMMMMMMMMMMMMMMMN.............NMMMD.......8MMMMM=...~MMMM=...:MMMMMMMMMMMMMMMM~.....=MMMMMMMMMMMMMMMM.....OMMMM8........ZMMMM$.....
-...+MMMMMMMMMMMMMMMM8.... 7MMMM,.............?MMMM.........NMMMN....=MMMMMMMMMMMMMMMMN....    .....NMMMD.....~MMMMMO.....:MMMM=...:MMMMMMMMMMMMMMMMM7....=MMMMMMMMMMMMMMMMM... .ZMMMMD. ....$MMMM$....  
-...+MMMM........IMMMM=....7MMMM,.............?MMMM.........NMMMN....=MMMM,.........................NMMMD....$MMMMM=......~MMMM=...:MMMM~.......,MMMMM....=MMMM........=MMMM7.....ZMMMMZ....?MMMMZ.......
-. .+MMMM........,MMMM=... 7MMMM,      ..   ..?MMMM.... ....NMMMN....=MMMM,..       .....        ...NMMMD..:MMMMM$... ....~MMMM=...:MMMM~... . ..7MMMM....=MMMM..   ....MMMMI.. ...?MMMM8..?MMMM+....    
-. .+MMMM.. .  .,DMMMO.... 7MMMM,      ..   ..?MMMM.... ....NMMMN....=MMMM,..        ....        ...NMMMD.7MMMMM,....   ..~MMMM=...:MMMM~.. .....NMMMM....=MMMM..   ...ZMMMM. . ....$MMMM$=MMMMI.        
-. .+MMMMMMMMMMMMMMM+..... 7MMMM,      ..   ..?MMMM..   ....NMMMN....=MMMMMMMMMMMMMMMM...        ...NMMMNMMMMMMM=....   ..:MMMM=...:MMMMMMMMMMMMMMMMM~....=MMMMMMMMMMMMMMM7..     ...=MMMMMMMM+..        
-. .+MMMMMMMMMMMMMMM8:.... 7MMMM,      ..  ...?MMMM..   ....NMMMN....=MMMMMMMMMMMMMMMN...        ...NMMMMMMMMMMMM:...   ..:MMMM=...:MMMMMMMMMMMMMMMD......=MMMMMMMMMMMMMMMN=.. ..   ..IMMMMMM?. .    ..  
-. .+MMMMIIIIIIIZMMMMMI... 7MMMM,      ..   ..=MMMM..   ....NMMMN....=MMMM7IIIIIIIIIII...        ...NMMMMMMI,MMMMM:..   ..~MMMM=...:MMMMMMMMMMMMM.........=MMMM7IIIIII7MMMMMO....   ...IMMMMI.. .        
-. .+MMMM.. .  ...IMMMM=.. 7MMMM,      ..    .~MMMM.........NMMMN....=MMMM,..         ...        ...NMMMMM...:MMMMM~......~MMMM=...:MMMM~....NMMMMO.......=MMMM..     ..:MMMM7...   ...:MMMM~....        
-. .+MMMM....   ..~MMMMI.. 7MMMM,      ..    .,MMMM~.. .....MMMMO....=MMMM,..                    ...NMMMD... .~MMMMM=.....~MMMM=...:MMMM~.....NMMMMM......=MMMM..   .....MMMM8...    ..:MMMM~....        
-. .+MMMM....   .,NMMMM=.. 7MMMM,      ..   ...MMMMM,......$MMMM=....=MMMM,..                    ...NMMMD......:MMMMM?.. .~MMMM=...:MMMM~......ZMMMMM.....=MMMM..    ...DMMMM+...    ..:MMMM~....        
-...+MMMMMMMMMMMMMMMMMZ... 7MMMMMMMMMMMMMMM=...?MMMMMMZZZOMMMMMM. ...=MMMMMMMMMMMMMMMMM....  ..  ...NMMMD.......+MMMMM=...:MMMM=...:MMMM~.......OMMMMM....=MMMMMMMMMMMMMMMMMM....    ..:MMMM~......  ....
-...+MMMMMMMMMMMMMMMM+.... 7MMMMMMMMMMMMMMM=.....MMMMMMMMMMMMMM......=MMMMMMMMMMMMMMMMM....  .......NMMMD........?MMMMM+..:MMMM=...:MMMM~........ZMMMMN...=MMMMMMMMMMMMMMMMO... .  ....:MMMM~......  ....
-...+MMMMMMMMMMMMM+........IMMMMMMMMMMMMMMM+ ......MMMMMMMMM+........=MMMMMMMMMMMMMMMMM.,...........MMMMN.........?MMMMM+.,MMMM+...,MMMM+. .......$MMMMM..~MMMMMMMMMMMMM7..............~MMMM:. ..........
-................  ........  .............. .............. .. .......  ................  ................ ........ ......   ........ .. . ........ ....     ........... . ................... ...........
+ .  ....................................................................................................................
+..MMMMMMMM8....,MM~........MMM.....NMM...MMMMMMMMMM........NMM.....MMMO..MMZ..MMMMMMMMM7....MMMMMMMMM...,MMM......MMM...
+..MMMMMMMMMM...,MM:........MMM.....NMM...MMMMMMMMMM...  ...NMM...+MMM....MMZ..MMMMMMMMMMM...MMMMMMMMMM?. :MMM...:MMM..  
+..MM$.....MM$..,MM:........MMM.....NMM...MMN...............NMM..MMM7.....MMZ..MMM.....7MM...MM8.....MMD...~MMN..MMN.....
+..MM8???IMMM. .,MM:   ..  .MMM.  ..NMM...MMM???????.     ..NMM~MMM..   ..MMZ .MMM....?MMM...MMD???IMMM.  ...MMMMMM.     
+..MMMMMMMMM8...,MM:   .. ..MMM.  ..NMM...MMMMMMMMMN.     ..NMMMMMMM..  ..MMZ .MMMMMMMMMM....MMMMMMMMMN...  .=MMMM..  .  
+..MMZ.....MMM..,MM:   ..  .MMM.   .NMM...MMN........     ..NMMM.,MMM.  ..MMZ .MMM..OMM8.....MM8.....MMM..  ..MMM...     
+..MM$.   .DMM..,MM:   ..  .NMM.....MMM...MMN.            ..NMM....MMM....MMZ .MMM...,MMM....MM8.  ..8MM..   .NMM...     
+..MMMMMMMMMMM..,MMMMMMMMM..,MMM+..MMM? ..MMMMMMMMMM~.. . ..NMM....~MMM...MMZ .MMM....~MMN...MMMMMMMMMMM..   .NMM.... ...
+..MMMMMMMMM:. .,MMMMMMMMM....MMMMMMM:....MMMMMMMMMM~.. ....NMM.....+MMM..MMZ..MMM.... ,MMM..MMMMMMMMM=... ...NMM.... ...
+..       ......           .........  .....         .........   ..... . . .  ...   ....  . ..       ............  .......
 If you paid for this, you got scammed, kido
 I'll be updating this regularly and it's pretty modular so feel free to add onto it
 Please don't reupload any shitty variation of the hack you make.
 
 NOTICE: If you take code from this, add credits for Blue Kirby please. THANK YAWWW
-Official Blue Bot thread: http://www.mpgh.net/forum/713-garrys-mod-hacks-cheats/653677-blue-bot-lua-hack.html]]
+Official Blue Bot thread: http://www.mpgh.net/forum/713-garrys-mod-hacks-cheats/654228-blue-bot-lua-hack.html]]
 
 local BB = { };
 
@@ -34,7 +28,7 @@ local BB = { };
 
 --Default to nil if you want to use a random prefix
 -----------------------
-BB.CustomPrefix = nil;
+BB.CustomPrefix = "bluebot";
 -----------------------
 
 -------------------------------------------------------
@@ -56,6 +50,17 @@ function BB.RandomString( len, numbers, special )
 	return tostring(result);
 end
 
+BB.MetaPlayer = FindMetaTable( "Player" );
+BB.MetaConVar = FindMetaTable( "ConVar" );
+
+BB.CreateClientConVar = CreateClientConVar;
+function BB.MetaConVar:OnMenu() return false; end
+
+local function CreateClientConVar( name, default, save, onmenu )
+	BB.CreateClientConVar( name, default, save, false );
+	return {cvar = GetConVar( name ), OnMenu = onmenu};
+end
+
 BB.RandomPrefix = BB.CustomPrefix or BB.RandomString( math.random( 5, 8 ), false );
 BB.DeadPlayers = { };
 BB.Traitors = { };
@@ -65,19 +70,21 @@ BB.ply = LocalPlayer;
 BB.players = player.GetAll;
 BB.Target = nil;
 BB.ShouldReturn = false;
-BB.AimbotEnabled = CreateClientConVar( BB.RandomPrefix.."_aimbot_enabled", "0", true, false );
-BB.MaxAngle = CreateClientConVar( BB.RandomPrefix.."_aimbot_max_angle", "30", true, false );
-BB.FriendlyFire = CreateClientConVar( BB.RandomPrefix.."_aimbot_friendly_fire", "1", true, false );
-BB.ESPEnabled = CreateClientConVar( BB.RandomPrefix.."_esp_enabled", "1", true, false );
-BB.ChamsEnabled = CreateClientConVar( BB.RandomPrefix.."_chams_enabled", "1", true, false );
-BB.CrosshairEnabled = CreateClientConVar( BB.RandomPrefix.."_crosshair_enabled", "1", true, false );
+BB.CVARS = {Bools = { }, Numbers = { }};
+BB.CVARS.Bools["Aimbot"] = CreateClientConVar( BB.RandomPrefix.."_aimbot_enabled", "0", true, true );
+BB.CVARS.Numbers["Max Angle"] = CreateClientConVar( BB.RandomPrefix.."_aimbot_max_angle", "30", true, true );
+BB.CVARS.Bools["Aim at friends"] = CreateClientConVar( BB.RandomPrefix.."_aimbot_friendly_fire", "1", true, true );
+BB.CVARS.Bools["ESP"] = CreateClientConVar( BB.RandomPrefix.."_esp_enabled", "1", true, true );
+BB.CVARS.Bools["Chams"] = CreateClientConVar( BB.RandomPrefix.."_chams_enabled", "1", true, true );
+BB.CVARS.Bools["Crosshair"] = CreateClientConVar( BB.RandomPrefix.."_crosshair_enabled", "1", true, true );
 BB.Mat = CreateMaterial( string.lower( BB.RandomString( math.random( 5, 8 ), false, false ) ), "VertexLitGeneric", { ["$basetexture"] = "models/debug/debugwhite", ["$model"] = 1, ["$ignorez"] = 1 } ); --Last minute change
 BB.HeadPos = nil;
 BB.TraceRes = nil;
 BB.Font = nil;
 BB.IsTraitor = nil;
 BB.IsTTT = false;
-BB.MetaPlayer = FindMetaTable("Player");
+BB.PrintEx = MsgC;
+BB.Version = "0.5.4";
 
 function BB.Init( )
 	--Eww this is ugly
@@ -87,8 +94,8 @@ function BB.Init( )
 	
 	RunConsoleCommand( "showconsole" );
 	Msg( "\n\n\n" );
-	BB.Print( Color( 25, 225, 80 ), "Loaded!" );
-	BB.Print( Color( 255, 255, 255 ), "Your random prefix is "..BB.RandomPrefix );
+	BB.Print( true, true, Color( 25, 225, 80 ), "Loaded!", Color( 255, 255, 255 ), "\tv"..BB.Version );
+	BB.Print( true, true, Color( 255, 255, 255 ), "Your random prefix is "..BB.RandomPrefix );
 	MsgC( Color( 255, 255, 255 ), "Made by: Blue Kirby\n\n\n\n" );
 	
 	if (BB.IsTTT) then
@@ -106,14 +113,30 @@ function BB.Init( )
 	end
 end
 
-function BB.Print( color, message )
-	Msg( "["..os.date("%H:%M:%S").."] " );
-	MsgC( Color( 50, 100, 255 ), "[Blue Bot] " );
-	MsgC( color, message.."\n" );
+function BB.Print( timestamp, stamp, ... )
+	if (timestamp) then
+		Msg( "["..os.date("%H:%M:%S").."] " );
+	end
+	
+	if (stamp) then
+		MsgC( Color( 50, 100, 255 ), "[Blue Bot] " );
+	end
+	
+	local t = {...};
+	
+	if (#t == 1) then
+		BB.PrintEx( Color(255, 255, 255), t[1] );
+	else
+		for i = 1, #t, 2 do
+			BB.PrintEx( t[i], t[i+1] );
+		end
+	end
+	
+	Msg('\n');
 end
 
-function BB.PrintChat( color, message )
-	chat.AddText( Color( 50, 100, 255 ), "[Blue Bot] ", color, message );
+function BB.PrintChat( ... )
+	chat.AddText( Color( 50, 100, 255 ), "[Blue Bot] ", ... );
 end
 
 function BB.Error( error )
@@ -138,7 +161,7 @@ function BB.GetValidPlayers( )
 		ply:IsPlayer() && 
 		ply:Alive() && 
 		ply:Health() >= 1 &&
-		( !BB.IsOnTeam( ply ) || BB.FriendlyFire:GetBool() ) ) then
+		( !BB.IsOnTeam( ply ) || BB.CVARS.Bools["Aim at friends"].cvar:GetBool() ) ) then
 			table.insert( players, ply );
 		end
 	end
@@ -172,7 +195,7 @@ function BB.ClosestAngle( players )
 		local angAngle = ( vecPos - BB.ply():EyePos() ):Angle()
 		local flDif = math.abs( math.AngleDifference( angAngle.p, viewAngles.p ) ) + math.abs( math.AngleDifference( angAngle.y, viewAngles.y ) );
 		
-		if ((flAngleDifference == nil || flDif < flAngleDifference) && (!BB.MaxAngle:GetBool() || flDif < BB.MaxAngle:GetFloat())) then
+		if ((flAngleDifference == nil || flDif < flAngleDifference) && (!BB.CVARS.Numbers["Max Angle"].cvar:GetBool() || flDif < BB.CVARS.Numbers["Max Angle"].cvar:GetFloat())) then
 			BB.HeadPos = oldpos:ToScreen();
 			BB.Target = ply;
 			flAngleDifference = flDif;
@@ -188,7 +211,7 @@ function BB.VelocityPrediction( ply ) return ply:GetAbsVelocity() * 0.012; end
 function BB.Aimbot( )
 	BB.HeadPos = nil;
 	
-	if (!BB.AimbotEnabled:GetBool() || BB.ShouldReturn) then return end
+	if (!BB.CVARS.Bools["Aimbot"].cvar:GetBool() || BB.ShouldReturn) then return end
 	
 	local players = {};
 	
@@ -253,9 +276,9 @@ function BB.SubtractFromColor( color, sub )
 end
 
 function BB.ESP( )
-	if (!BB.CrosshairEnabled:GetBool() && !BB.ESPEnabled:GetBool()) then return end;
+	if (!BB.CVARS.Bools["Crosshair"].cvar:GetBool() && !BB.CVARS.Bools["ESP"].cvar:GetBool()) then return end;
 	
-	if (BB.CrosshairEnabled:GetBool()) then
+	if ( BB.CVARS.Bools["Crosshair"].cvar:GetBool() ) then
 		surface.SetDrawColor(Color(255, 255, 255))
 		surface.DrawLine( ScrW()/2-10, ScrH()/2, ScrW()/2-4, ScrH()/2 );
 		surface.DrawLine( ScrW()/2+10, ScrH()/2, ScrW()/2+4, ScrH()/2 );
@@ -263,7 +286,7 @@ function BB.ESP( )
 		surface.DrawLine( ScrW()/2, ScrH()/2+10, ScrW()/2, ScrH()/2+4 );
 	end
 	
-	if ( !BB.ESPEnabled:GetBool() ) then return end
+	if ( !BB.CVARS.Bools["ESP"].cvar:GetBool() ) then return end
 	
 	surface.SetFont( BB.Font );
 	
@@ -329,7 +352,7 @@ function BB.ESP( )
 end
 
 function BB.Chams()
-	if (BB.ChamsEnabled:GetBool()) then
+	if (BB.CVARS.Bools["Chams"].cvar:GetBool()) then
 		for _, ply in pairs( BB.GetPlayersByDistance( ) ) do
 			if (IsValid( ply ) && ply:Alive() && ply:Health() > 0 && ply:Team() != TEAM_SPECTATOR) then
 				local color = (BB.IsTTT and ply:IsTraitor( )) and Color( 200, 50, 50 ) or team.GetColor( ply:Team( ) );
@@ -488,40 +511,16 @@ function BB.Menu( )
 		draw.RoundedBox( 4, 0, 0, List:GetWide(), List:GetTall(), Color( 0, 0, 0, 150 ) );
 	end
 	
-	local CheckBox = vgui.Create( "DCheckBoxLabel" );
-    CheckBox:SetText( "Aimbot Enabled" );
-    CheckBox:SetConVar( BB.RandomPrefix.."_aimbot_enabled" );
-    CheckBox:SetValue( BB.AimbotEnabled:GetBool() );
-    CheckBox:SizeToContents();
-	List:AddItem( CheckBox );
-	
-	CheckBox = vgui.Create( "DCheckBoxLabel" );
-    CheckBox:SetText( "Friendly Fire" );
-    CheckBox:SetConVar( BB.RandomPrefix.."_aimbot_friendly_fire" );
-    CheckBox:SetValue( BB.FriendlyFire:GetBool() );
-    CheckBox:SizeToContents();
-	List:AddItem( CheckBox );
-	
-	CheckBox = vgui.Create( "DCheckBoxLabel" );
-    CheckBox:SetText( "ESP Enabled" );
-    CheckBox:SetConVar( BB.RandomPrefix.."_esp_enabled" );
-    CheckBox:SetValue( BB.ESPEnabled:GetBool() );
-    CheckBox:SizeToContents();
-	List:AddItem( CheckBox );
-	
-	CheckBox = vgui.Create( "DCheckBoxLabel" );
-    CheckBox:SetText( "Chams Enabled" );
-    CheckBox:SetConVar( BB.RandomPrefix.."_chams_enabled" );
-    CheckBox:SetValue( BB.ChamsEnabled:GetBool() );
-    CheckBox:SizeToContents();
-	List:AddItem( CheckBox );
-	
-	CheckBox = vgui.Create( "DCheckBoxLabel" );
-    CheckBox:SetText( "Crosshair Enabled" );
-    CheckBox:SetConVar( BB.RandomPrefix.."_crosshair_enabled" );
-    CheckBox:SetValue( BB.CrosshairEnabled:GetBool() );
-    CheckBox:SizeToContents();
-	List:AddItem( CheckBox );
+	for name, base in pairs(BB.CVARS.Bools) do
+		if (base.OnMenu) then
+			local CheckBox = vgui.Create( "DCheckBoxLabel" );
+			CheckBox:SetText( name );
+			CheckBox:SetConVar( base.cvar:GetName() );
+			CheckBox:SetValue( base.cvar:GetBool() );
+			CheckBox:SizeToContents();
+			List:AddItem( CheckBox );
+		end
+	end
 	
 	List = vgui.Create( "DPanelList", Panel );
 	List:SetPos( 275, 65 );
@@ -547,10 +546,10 @@ BB.AddHook( "HUDPaint", BB.RandomString( 0, true, true ), BB.ESP );
 concommand.Add( BB.RandomPrefix.."_unload", function( ply, cmd, args ) 
 	for i = 1, #BB.RandomHooks.hook do
 		hook.Remove( BB.RandomHooks.hook[i], BB.RandomHooks.name[i] );
-		BB.Print( Color( 255, 255, 255 ), "Unhooked "..BB.RandomHooks.hook[i].." using name "..BB.RandomHooks.name[i] );
+		BB.Print( true, true, Color( 255, 255, 255 ), "Unhooked "..BB.RandomHooks.hook[i].." using name "..BB.RandomHooks.name[i] );
 	end
 	concommand.Remove( BB.RandomPrefix.."_unload" )
-	BB.Print( Color( 255, 255, 255 ), "Unloaded successfully!" );
+	BB.Print( true, true, Color( 255, 255, 255 ), "Unloaded successfully!" );
 end );
 
 concommand.Add( BB.RandomPrefix.."_menu", BB.Menu );
