@@ -1,4 +1,4 @@
---[[BBVERSION=054
+--[[BBVERSION=060
 Made by:
  .  ....................................................................................................................
 ..MMMMMMMM8....,MM~........MMM.....NMM...MMMMMMMMMM........NMM.....MMMO..MMZ..MMMMMMMMM7....MMMMMMMMM...,MMM......MMM...
@@ -84,7 +84,9 @@ BB.Font = nil;
 BB.IsTraitor = nil;
 BB.IsTTT = false;
 BB.PrintEx = MsgC;
-BB.Version = "0.5.4";
+BB.LatestVersion = nil;
+BB.Version = "0.6.0";
+BB.V = 60; --DO NOT EDIT THIS
 
 function BB.Init( )
 	--Eww this is ugly
@@ -104,8 +106,14 @@ function BB.Init( )
 			local findpos = string.find( HTML, "BBVERSION=", 0, false );
 			
 			if (findpos) then
-				local version = string.sub( HTML, findpos+10, findpos+13 );
-				print( version );
+				local version = tonumber( string.sub( HTML, findpos+10, findpos+13 ) );
+				if ( version > BB.V ) then
+					BB.Print( Color( 255, 200, 50 ), "Your version is out of date!" );
+					BB.LatestVersion = HTML;
+					BB.UpdateMenu();
+				else
+					BB.Print( Color( 200, 255, 200 ), "Your version is up to date." );
+				end
 			end
 		end,
 		
@@ -547,6 +555,44 @@ function BB.Menu( )
 	List:SetPadding( 5 );
 	function List:Paint()
 		draw.RoundedBox( 4, 0, 0, List:GetWide(), List:GetTall(), Color( 0, 0, 0, 150 ) );
+	end
+end
+
+function BB.UpdateMenu()
+	local Panel = vgui.Create( "DFrame" );
+	Panel:SetSize( 800, 600 );
+	Panel:SetPos( ScrW()/2-Panel:GetWide()/2, ScrH()/2-Panel:GetTall()/2 );
+	Panel:SetTitle( "Blue Bot - Notice" );
+	Panel:MakePopup();
+	
+	local Label = vgui.Create( "DLabel", Panel );
+	Label:SetColor( Color( 255, 255, 255, 255 ) );
+	Label:SetFont( "DermaLarge" );
+	Label:SetText( "Your version is outdated" );
+	Label:SizeToContents();
+	Label:SetPos( Label:GetParent():GetWide()/2-Label:GetWide()/2-5, 50 );
+	
+	local HTML = vgui.Create( "HTML", Panel )
+	HTML:OpenURL( "http://bluekirbygmod.googlecode.com/svn/trunk/Blue%20Bot/blue_bot.lua" )
+	HTML:SetSize( HTML:GetParent():GetWide() - 50, HTML:GetParent():GetTall() - 160 )
+	HTML:SetPos( 25, 100 )
+	HTML.Paint = function()
+		surface.SetDrawColor( Color( 255, 255, 255, 255 ) );
+		surface.DrawRect( 0, 0, HTML:GetWide(), HTML:GetTall() );
+	end
+	
+	local Button = vgui.Create( "DButton", Panel )
+	Button:SetText( "Save" )
+	Button:SetSize( Button:GetParent():GetWide() - 50, 25 )
+	Button:SetPos( 25, Button:GetParent():GetTall() - 30 )
+	Button.DoClick = function()
+		HTML:SetVisible( false );
+		Panel:SetSize( 400, 150 );
+		Panel:SetPos( ScrW()/2-Panel:GetWide()/2, ScrH()/2-Panel:GetTall()/2 );
+		Label:SetText( "Saved to data/bluebotv"..BB.V..".txt" );
+		Label:SizeToContents();
+		Label:SetPos( Label:GetParent():GetWide()/2-Label:GetWide()/2-5, 50 );
+		file.Write( "bluebotv"..BB.V..".txt", BB.LatestVersion );
 	end
 end
 
