@@ -1,4 +1,4 @@
---[[BBVERSION=0.5.4
+--[[BBVERSION=054
 Made by:
  .  ....................................................................................................................
 ..MMMMMMMM8....,MM~........MMM.....NMM...MMMMMMMMMM........NMM.....MMMO..MMZ..MMMMMMMMM7....MMMMMMMMM...,MMM......MMM...
@@ -104,7 +104,8 @@ function BB.Init( )
 			local findpos = string.find( HTML, "BBVERSION=", 0, false );
 			
 			if (findpos) then
-				BB.Print( true, true, Color( 25, 225, 80 ), "Success!" )
+				local version = string.sub( HTML, findpos+10, findpos+13 );
+				print( version );
 			end
 		end,
 		
