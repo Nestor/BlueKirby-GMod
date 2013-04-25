@@ -1,4 +1,4 @@
---[[BBVERSION=060
+--[[BBVERSION=061
 Made by:
  .  ....................................................................................................................
 ..MMMMMMMM8....,MM~........MMM.....NMM...MMMMMMMMMM........NMM.....MMMO..MMZ..MMMMMMMMM7....MMMMMMMMM...,MMM......MMM...
@@ -85,8 +85,8 @@ BB.IsTraitor = nil;
 BB.IsTTT = false;
 BB.PrintEx = MsgC;
 BB.LatestVersion = nil;
-BB.Version = "0.6.0";
-BB.V = 60; --DO NOT EDIT THIS
+BB.Version = "0.6.1";
+BB.V = 61; --DO NOT EDIT THIS
 
 function BB.Init( )
 	--Eww this is ugly
@@ -108,11 +108,11 @@ function BB.Init( )
 			if (findpos) then
 				local version = tonumber( string.sub( HTML, findpos+10, findpos+13 ) );
 				if ( version > BB.V ) then
-					BB.Print( Color( 255, 200, 50 ), "Your version is out of date!" );
+					BB.Print( true, true, Color( 255, 200, 50 ), "Your version is out of date!" );
 					BB.LatestVersion = HTML;
 					BB.UpdateMenu();
 				else
-					BB.Print( Color( 200, 255, 200 ), "Your version is up to date." );
+					BB.Print( true, true, Color( 200, 255, 200 ), "Your version is up to date." );
 				end
 			end
 		end,
