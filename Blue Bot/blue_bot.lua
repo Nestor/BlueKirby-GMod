@@ -1,4 +1,4 @@
---[[
+--[[BBVERSION=0.5.4
 Made by:
  .  ....................................................................................................................
 ..MMMMMMMM8....,MM~........MMM.....NMM...MMMMMMMMMM........NMM.....MMMO..MMZ..MMMMMMMMM7....MMMMMMMMM...,MMM......MMM...
@@ -96,7 +96,22 @@ function BB.Init( )
 	Msg( "\n\n\n" );
 	BB.Print( true, true, Color( 25, 225, 80 ), "Loaded!", Color( 255, 255, 255 ), "\tv"..BB.Version );
 	BB.Print( true, true, Color( 255, 255, 255 ), "Your random prefix is "..BB.RandomPrefix );
+	BB.Print( true, true, Color( 255, 255, 255 ), "Checking for updates..." );
 	MsgC( Color( 255, 255, 255 ), "Made by: Blue Kirby\n\n\n\n" );
+	
+	http.Fetch( "http://bluekirbygmod.googlecode.com/svn/trunk/Blue%20Bot/blue_bot.lua", 
+		function( HTML ) 
+			local findpos = string.find( HTML, "BBVERSION=", 0, false );
+			
+			if (findpos) then
+				BB.Print( true, true, Color( 25, 225, 80 ), "Success!" )
+			end
+		end,
+		
+		function() 
+			BB.Error( "Failed checking for updates." );
+		end 
+	);
 	
 	if (BB.IsTTT) then
 		BB.IsTraitor = BB.MetaPlayer.IsTraitor
