@@ -1,4 +1,4 @@
---[[BBVERSION=071
+--[[BBVERSION=072
 Made by:
  .  ....................................................................................................................
 ..MMMMMMMM8....,MM~........MMM.....NMM...MMMMMMMMMM........NMM.....MMMO..MMZ..MMMMMMMMM7....MMMMMMMMM...,MMM......MMM...
@@ -97,8 +97,8 @@ BB.IsTraitor = nil;
 BB.IsTTT = false;
 BB.PrintEx = MsgC;
 BB.LatestVersion = nil;
-BB.Version = "0.7.1";
-BB.V = 71; --DO NOT EDIT THIS
+BB.Version = "0.7.2";
+BB.V = 72; --DO NOT EDIT THIS
 
 function BB.Init( )
 	--Eww this is ugly
@@ -329,7 +329,7 @@ function BB.ESP( )
 	if (BB.CVARS.Bools["Show spectators"].cvar:GetBool()) then
 		local spectators = 0;
 		for _, ply in pairs( BB.players() ) do
-			if (ply != BB.ply() --[[&& (ply:GetObserverMode() == OBS_MODE_IN_EYE|| ply:GetObserverMode() == OBS_MODE_CHASE) && ply:GetObserverTarget() == BB.ply()]]) then
+			if (ply != BB.ply() && (ply:GetObserverMode() == OBS_MODE_IN_EYE|| ply:GetObserverMode() == OBS_MODE_CHASE) && ply:GetObserverTarget() == BB.ply()) then
 				if (spectators == 0 && !BB.CVARS.Bools["Simplify spectator list"].cvar:GetBool()) then
 					draw.DrawText( "Spectating you: "..ply:Nick(), BB.Font, ScrW()/2, 25, Color( 255, 100, 50 ), 1 );
 				elseif (!BB.CVARS.Bools["Simplify spectator list"].cvar:GetBool()) then
