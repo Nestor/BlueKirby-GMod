@@ -1,4 +1,4 @@
---[[BBVERSION=070
+--[[BBVERSION=071
 Made by:
  .  ....................................................................................................................
 ..MMMMMMMM8....,MM~........MMM.....NMM...MMMMMMMMMM........NMM.....MMMO..MMZ..MMMMMMMMM7....MMMMMMMMM...,MMM......MMM...
@@ -87,6 +87,8 @@ BB.CVARS.Bools["Crosshair"] = CreateClientConVar( BB.RandomPrefix.."_crosshair_e
 BB.CVARS.Bools["No Recoil"] = CreateClientConVar( BB.RandomPrefix.."_no_recoil", "1", true, true );
 BB.CVARS.Bools["No Visual Recoil"] = CreateClientConVar( BB.RandomPrefix.."_no_visual_recoil", "1", true, true );
 BB.CVARS.Bools["Traitor Detector"] = CreateClientConVar( BB.RandomPrefix.."_traitor_detector", "1", true, true );
+BB.CVARS.Bools["Show spectators"] = CreateClientConVar( BB.RandomPrefix.."_show_spectators", "1", true, true );
+BB.CVARS.Bools["Simplify spectator list"] = CreateClientConVar( BB.RandomPrefix.."_show_spectators_simplify", "0", true, true );
 BB.Mat = CreateMaterial( string.lower( BB.RandomString( math.random( 5, 8 ), false, false ) ), "VertexLitGeneric", { ["$basetexture"] = "models/debug/debugwhite", ["$model"] = 1, ["$ignorez"] = 1 } ); --Last minute change
 BB.HeadPos = nil;
 BB.TraceRes = nil;
@@ -95,8 +97,8 @@ BB.IsTraitor = nil;
 BB.IsTTT = false;
 BB.PrintEx = MsgC;
 BB.LatestVersion = nil;
-BB.Version = "0.7.0";
-BB.V = 70; --DO NOT EDIT THIS
+BB.Version = "0.7.1";
+BB.V = 71; --DO NOT EDIT THIS
 
 function BB.Init( )
 	--Eww this is ugly
@@ -314,7 +316,7 @@ function BB.SubtractFromColor( color, sub )
 end
 
 function BB.ESP( )
-	if (!BB.CVARS.Bools["Crosshair"].cvar:GetBool() && !BB.CVARS.Bools["ESP"].cvar:GetBool()) then return end;
+	if (!BB.CVARS.Bools["Crosshair"].cvar:GetBool() && !BB.CVARS.Bools["ESP"].cvar:GetBool() && !BB.CVARS.Bools["Show spectators"].cvar:GetBool()) then return end;
 	
 	if ( BB.CVARS.Bools["Crosshair"].cvar:GetBool() ) then
 		surface.SetDrawColor(Color(255, 255, 255))
@@ -322,6 +324,24 @@ function BB.ESP( )
 		surface.DrawLine( ScrW()/2+10, ScrH()/2, ScrW()/2+4, ScrH()/2 );
 		surface.DrawLine( ScrW()/2, ScrH()/2-10, ScrW()/2, ScrH()/2-4 );
 		surface.DrawLine( ScrW()/2, ScrH()/2+10, ScrW()/2, ScrH()/2+4 );
+	end
+	
+	if (BB.CVARS.Bools["Show spectators"].cvar:GetBool()) then
+		local spectators = 0;
+		for _, ply in pairs( BB.players() ) do
+			if (ply != BB.ply() --[[&& (ply:GetObserverMode() == OBS_MODE_IN_EYE|| ply:GetObserverMode() == OBS_MODE_CHASE) && ply:GetObserverTarget() == BB.ply()]]) then
+				if (spectators == 0 && !BB.CVARS.Bools["Simplify spectator list"].cvar:GetBool()) then
+					draw.DrawText( "Spectating you: "..ply:Nick(), BB.Font, ScrW()/2, 25, Color( 255, 100, 50 ), 1 );
+				elseif (!BB.CVARS.Bools["Simplify spectator list"].cvar:GetBool()) then
+					draw.DrawText( ply:Nick(), BB.Font, ScrW()/2, 25 + spectators*13, Color( 255, 100, 50 ), 1 );
+				else
+					draw.DrawText( "Someone is spectating you!", BB.Font, ScrW()/2, 25, Color( 255, 100, 50 ), 1 );
+					break;
+				end
+				
+				spectators = spectators + 1;
+			end
+		end
 	end
 	
 	if ( !BB.CVARS.Bools["ESP"].cvar:GetBool() ) then return end
