@@ -1,0 +1,13 @@
+4/26/13 - v.0.7.1 - Added spectator feature by request
+
+4/26/13 - v.0.7.0 - Updated menu
+Added new ESP features
+Added tabs to menu
+Added more options in menu
+
+4/25/13 - v.0.6.0 - Added semi-automated updater
+
+4/25/13 - v.0.5.4 - Updated how CVARs work and made menu more modular
+Updated print command to be more functional since garry sucks
+
+4/25/13 - v.0.5.0 - Initial release
