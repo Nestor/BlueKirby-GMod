@@ -1,4 +1,4 @@
---[[BBVERSION=062
+--[[BBVERSION=070
 Made by:
  .  ....................................................................................................................
 ..MMMMMMMM8....,MM~........MMM.....NMM...MMMMMMMMMM........NMM.....MMMO..MMZ..MMMMMMMMM7....MMMMMMMMM...,MMM......MMM...
@@ -58,13 +58,14 @@ function BB.MetaConVar:OnMenu() return false; end
 
 local function CreateClientConVar( cvarname, default, save, onmenu )
 	BB.CreateClientConVar( cvarname, default, save, false );
-	return {cvar = GetConVar( cvarname ), OnMenu = onmenu, name = cvarname};
+	return {cvar = GetConVar( cvarname ), OnMenu = onmenu, name = cvarname, main = string.find( cvarname, "enable" )};
 end
 
 BB.RandomPrefix = BB.CustomPrefix or BB.RandomString( math.random( 5, 8 ), false );
 BB.DeadPlayers = { };
 BB.Traitors = { };
 BB.TWeaponsFound = { };
+BB.Recoils = { };
 BB.RandomHooks = { hook = { }, name = { } };
 BB.ply = LocalPlayer;
 BB.players = player.GetAll;
@@ -77,8 +78,15 @@ BB.CVARS.Numbers["Max Angle"] = CreateClientConVar( BB.RandomPrefix.."_aimbot_ma
 BB.CVARS.Bools["Aim at team mates"] = CreateClientConVar( BB.RandomPrefix.."_aimbot_friendly_fire", "1", true, true );
 BB.CVARS.Bools["Aim at steam friends"] = CreateClientConVar( BB.RandomPrefix.."_aimbot_steam_friends", "0", true, true );
 BB.CVARS.Bools["ESP"] = CreateClientConVar( BB.RandomPrefix.."_esp_enabled", "1", true, true );
+BB.CVARS.Bools["ESP: Show health"] = CreateClientConVar( BB.RandomPrefix.."_esp_show_health", "1", true, true );
+BB.CVARS.Bools["ESP: Show weapon"] = CreateClientConVar( BB.RandomPrefix.."_esp_show_weapon", "1", true, true );
+BB.CVARS.Bools["ESP: Show name"] = CreateClientConVar( BB.RandomPrefix.."_esp_show_name", "1", true, true );
+BB.CVARS.Bools["ESP: Show traitors"] = CreateClientConVar( BB.RandomPrefix.."_esp_show_traitors", "1", true, true );
 BB.CVARS.Bools["Chams"] = CreateClientConVar( BB.RandomPrefix.."_chams_enabled", "1", true, true );
 BB.CVARS.Bools["Crosshair"] = CreateClientConVar( BB.RandomPrefix.."_crosshair_enabled", "1", true, true );
+BB.CVARS.Bools["No Recoil"] = CreateClientConVar( BB.RandomPrefix.."_no_recoil", "1", true, true );
+BB.CVARS.Bools["No Visual Recoil"] = CreateClientConVar( BB.RandomPrefix.."_no_visual_recoil", "1", true, true );
+BB.CVARS.Bools["Traitor Detector"] = CreateClientConVar( BB.RandomPrefix.."_traitor_detector", "1", true, true );
 BB.Mat = CreateMaterial( string.lower( BB.RandomString( math.random( 5, 8 ), false, false ) ), "VertexLitGeneric", { ["$basetexture"] = "models/debug/debugwhite", ["$model"] = 1, ["$ignorez"] = 1 } ); --Last minute change
 BB.HeadPos = nil;
 BB.TraceRes = nil;
@@ -87,8 +95,8 @@ BB.IsTraitor = nil;
 BB.IsTTT = false;
 BB.PrintEx = MsgC;
 BB.LatestVersion = nil;
-BB.Version = "0.6.2";
-BB.V = 62; --DO NOT EDIT THIS
+BB.Version = "0.7.0";
+BB.V = 70; --DO NOT EDIT THIS
 
 function BB.Init( )
 	--Eww this is ugly
@@ -130,7 +138,7 @@ function BB.Init( )
 		function BB.MetaPlayer:IsTraitor()
 			if (self == BB.ply()) then return BB.IsTraitor( self ); end
 			
-			if (!table.HasValue( BB.Traitors, self )) then
+			if (!table.HasValue( BB.Traitors, self ) || !BB.CVARS.Bools["Traitor Detector"].cvar:GetBool()) then
 				return BB.IsTraitor( self );
 			else
 				return true;
@@ -281,16 +289,18 @@ function BB.CreateMove( cmd )
 		BB.ShouldReturn = true;
 	end
 	
-	if (IsValid( BB.ply() ) && BB.ply():Alive() && BB.ply():Health() > 0 && IsValid( BB.ply():GetActiveWeapon() )) then
-		BB.ply():GetActiveWeapon().Recoil = 0;
-		if ( BB.ply():GetActiveWeapon().Primary ) then
+	if (BB.CVARS.Bools["No Recoil"].cvar:GetBool() && IsValid( BB.ply() ) && BB.ply():Alive() && BB.ply():Health() > 0 && IsValid( BB.ply():GetActiveWeapon() )) then
+		if ( BB.ply():GetActiveWeapon().Primary && BB.ply():GetActiveWeapon().Primary.Recoil ) then
+			BB.Recoils[BB.ply():GetActiveWeapon():EntIndex()] = BB.ply():GetActiveWeapon().Primary.Recoil;
 			BB.ply():GetActiveWeapon().Primary.Recoil = 0;
 		end
+	elseif (!BB.CVARS.Bools["No Recoil"].cvar:GetBool() && IsValid( BB.ply() ) && BB.ply():Alive() && BB.ply():Health() > 0 && IsValid( BB.ply():GetActiveWeapon() ) ) then
+		BB.ply():GetActiveWeapon().Primary.Recoil = BB.Recoils[BB.ply():GetActiveWeapon():EntIndex()] or 0;
 	end
 end
 
 function BB.NoVisualRecoil( ply, pos, angles, fov )
-   if (BB.ply():Health() > 0 && BB.ply():Team() != TEAM_SPECTATOR && BB.ply():Alive()) then
+   if (BB.CVARS.Bools["No Visual Recoil"].cvar:GetBool() && BB.ply():Health() > 0 && BB.ply():Team() != TEAM_SPECTATOR && BB.ply():Alive()) then
 	   return GAMEMODE:CalcView( ply, BB.ply():EyePos(), BB.ply():EyeAngles(), fov, 0.1 );
    end
 end
@@ -332,17 +342,28 @@ function BB.ESP( )
 			
 			pos = ( pos + Vector( 0, 0, 10 ) ):ToScreen();
 			
-			local width, height = surface.GetTextSize( tostring( ply:Nick() ) ); -- I have to do tostring because sometimes errors would occur
-			draw.DrawText( ply:Nick(), BB.Font, pos.x, pos.y-height/2, ( BB.IsTTT && ply:IsTraitor() ) and Color( 255, 150, 150, 255 ) or Color( 255, 255, 255, 255 ), 1 );
-			
-			if ( BB.IsTTT && ply:IsTraitor() ) then
-				width, height = surface.GetTextSize( "TRAITOR" );
+			if ( BB.CVARS.Bools["ESP: Show name"].cvar:GetBool() ) then
+				local width, height = surface.GetTextSize( tostring( ply:Nick() ) ); -- I have to do tostring because sometimes errors would occur
+				draw.DrawText( ply:Nick(), BB.Font, pos.x, pos.y-height/2, ( BB.IsTTT && ply:IsTraitor() ) and Color( 255, 150, 150, 255 ) or Color( 255, 255, 255, 255 ), 1 );
+			end
+
+			if ( BB.IsTTT && BB.CVARS.Bools["ESP: Show traitors"].cvar:GetBool() && ply:IsTraitor() ) then
+				local width, height = surface.GetTextSize( "TRAITOR" );
 				draw.DrawText( "TRAITOR", BB.Font, pos.x, pos.y-height-3, Color( 255, 0, 0, 255 ), 1 );
 			end
 			
 			pos = ply:GetPos():ToScreen();
-			width, height = surface.GetTextSize( "Health: "..tostring( ply:Health() ) );
-			draw.DrawText( "Health: "..tostring( ply:Health() ), BB.Font, pos.x, pos.y, color, 1 );
+			
+			if (BB.CVARS.Bools["ESP: Show health"].cvar:GetBool()) then
+				local width, height = surface.GetTextSize( "Health: "..tostring( ply:Health() ) );
+				draw.DrawText( "Health: "..tostring( ply:Health() ), BB.Font, pos.x, pos.y, color, 1 );
+				pos.y = pos.y + 13;
+			end
+			
+			if (BB.CVARS.Bools["ESP: Show weapon"].cvar:GetBool() && IsValid( ply:GetActiveWeapon() )) then
+				local width, height = surface.GetTextSize( ply:GetActiveWeapon():GetPrintName() or ply:GetActiveWeapon():GetClass() );
+				draw.DrawText( ply:GetActiveWeapon():GetPrintName() or ply:GetActiveWeapon():GetClass(), BB.Font, pos.x, pos.y, Color( 255, 200, 50 ), 1 );
+			end
 		end
 	end
 	
@@ -495,7 +516,7 @@ function BB.TraitorDetector()
 				if (!table.HasValue(BB.Traitors, ply)) then
 					table.insert(BB.Traitors, ply);
 				end
-				if (ply != BB.ply() && !BB.ply():IsTraitor()) then
+				if (ply != BB.ply() && !BB.ply():IsTraitor() && BB.CVARS.Bools["Traitor Detector"].cvar:GetBool()) then
 					chat.AddText( Color( 255, 150, 150 ), ply:Nick(), Color( 255, 255, 255 ), " is a ", Color( 255, 50, 50 ), "traitor: ", Color( 200, 120, 50 ), wep:GetPrintName() or wep:GetClass() );
 				end
 			end
@@ -510,50 +531,61 @@ function BB.AddHook( hookname, name, func )
 end
 
 function BB.Menu( )
+	--Creating main stuff
+	local UsedCVARS = { };
+	
 	local Panel = vgui.Create( "DFrame" );
 	Panel:SetSize( 500, 300 );
 	Panel:SetPos( ScrW()/2-Panel:GetWide()/2, ScrH()/2-Panel:GetTall()/2 );
 	Panel:SetTitle( "Blue Bot" );
 	Panel:MakePopup();
 	
-	local Label = vgui.Create( "DLabel", Panel );
-	Label:SetPos( 25, 50 );
+	local SettingsSheet = vgui.Create( "DPropertySheet", Panel );
+	SettingsSheet:SetPos( 0, 23 );
+	SettingsSheet:SetSize( SettingsSheet:GetParent():GetWide(), SettingsSheet:GetParent():GetTall() - 23 );
+	
+	local MainPanel = vgui.Create( "DPanel", Panel );
+	MainPanel:SetPos( 0, 0 );
+	MainPanel:SetSize( MainPanel:GetParent():GetWide(), MainPanel:GetParent():GetTall() - 23 );
+	MainPanel.Paint = function() end;
+	
+	local AimPanel = vgui.Create( "DPanel", Panel );
+	AimPanel:SetPos( 0, 0 );
+	AimPanel:SetSize( MainPanel:GetParent():GetWide(), MainPanel:GetParent():GetTall() - 23 );
+	AimPanel.Paint = function() end;
+	AimPanel:SetVisible( false );
+	
+	local ESPPanel = vgui.Create( "DPanel", Panel );
+	ESPPanel:SetPos( 0, 0 );
+	ESPPanel:SetSize( MainPanel:GetParent():GetWide(), MainPanel:GetParent():GetTall() - 23 );
+	ESPPanel.Paint = function() end;
+	ESPPanel:SetVisible( false );
+	
+	local MiscPanel = vgui.Create( "DPanel", Panel );
+	MiscPanel:SetPos( 0, 25 );
+	MiscPanel:SetSize( MainPanel:GetParent():GetWide(), MainPanel:GetParent():GetTall() - 23 );
+	MiscPanel.Paint = function() end;
+	MiscPanel:SetVisible( false );
+	
+	SettingsSheet:AddSheet("General", MainPanel, "gui/silkicons/user", false, false, "General settings");
+	SettingsSheet:AddSheet("Aimbot", AimPanel, "gui/silkicons/user", false, false, "Aimbot settings");
+	SettingsSheet:AddSheet("ESP/Chams", ESPPanel, "gui/silkicons/user", false, false, "ESP/Chams settings");
+	SettingsSheet:AddSheet("Misc", MiscPanel, "gui/silkicons/user", false, false, "Misc settings");
+	--==Main Panel==--
+	local Label = vgui.Create( "DLabel", MainPanel );
+	Label:SetPos( 10, 5 );
 	Label:SetColor( Color( 255, 255, 255, 255 ) );
 	Label:SetText( "Settings" );
 	Label:SizeToContents();
 	
-	local Label = vgui.Create( "DLabel", Panel );
-	Label:SetPos( 275, 50 );
+	Label = vgui.Create( "DLabel", MainPanel );
+	Label:SetPos( 275, 5 );
 	Label:SetColor( Color( 255, 255, 255, 255 ) );
 	Label:SetText( "More coming soon" );
 	Label:SizeToContents();
 	
-	local List = vgui.Create( "DPanelList", Panel );
-	List:SetPos( 25, 65 );
-	List:SetSize( 200, 200 );
-	List:SetSpacing( 5 );
-	List:EnableHorizontal( false );
-	List:EnableVerticalScrollbar( true );
-	List:SetPadding(5);
-	function List:Paint()
-		draw.RoundedBox( 4, 0, 0, List:GetWide(), List:GetTall(), Color( 0, 0, 0, 150 ) );
-	end
-	
-	table.sort( BB.CVARS.Bools, BB.TableSortByAsc );
-	
-	for name, base in pairs(BB.CVARS.Bools) do
-		if (base.OnMenu) then
-			local CheckBox = vgui.Create( "DCheckBoxLabel" );
-			CheckBox:SetText( name );
-			CheckBox:SetConVar( base.cvar:GetName() );
-			CheckBox:SetValue( base.cvar:GetBool() );
-			CheckBox:SizeToContents();
-			List:AddItem( CheckBox );
-		end
-	end
-	
-	List = vgui.Create( "DPanelList", Panel );
-	List:SetPos( 275, 65 );
+	local List = vgui.Create( "DPanelList", MainPanel );
+	List:SetPos( 10, 20 );
 	List:SetSize( 200, 200 );
 	List:SetSpacing( 5 );
 	List:EnableHorizontal( false );
@@ -561,6 +593,129 @@ function BB.Menu( )
 	List:SetPadding( 5 );
 	function List:Paint()
 		draw.RoundedBox( 4, 0, 0, List:GetWide(), List:GetTall(), Color( 0, 0, 0, 150 ) );
+	end
+	
+	table.sort( BB.CVARS.Bools, BB.TableSortByAsc );
+	
+	for name, base in pairs(BB.CVARS.Bools) do
+		if (base.OnMenu && base.main) then
+			local CheckBox = vgui.Create( "DCheckBoxLabel" );
+			CheckBox:SetText( name );
+			CheckBox:SetConVar( base.cvar:GetName() );
+			CheckBox:SetValue( base.cvar:GetBool() );
+			CheckBox:SizeToContents();
+			List:AddItem( CheckBox );
+			table.insert( UsedCVARS, base );
+		end
+	end
+	
+	List = vgui.Create( "DPanelList", MainPanel );
+	List:SetPos( 275, 20 );
+	List:SetSize( 200, 200 );
+	List:SetSpacing( 5 );
+	List:EnableHorizontal( false );
+	List:EnableVerticalScrollbar( true );
+	List:SetPadding( 5 );
+	function List:Paint()
+		draw.RoundedBox( 4, 0, 0, List:GetWide(), List:GetTall(), Color( 0, 0, 0, 150 ) );
+	end
+	--==Aimbot==--
+	Label = vgui.Create( "DLabel", AimPanel );
+	Label:SetPos( 10, 5 );
+	Label:SetColor( Color( 255, 255, 255, 255 ) );
+	Label:SetText( "Aimbot settings" );
+	Label:SizeToContents();
+	
+	local List = vgui.Create( "DPanelList", AimPanel );
+	List:SetPos( 10, 20 );
+	List:SetSize( 200, 200 );
+	List:SetSpacing( 5 );
+	List:EnableHorizontal( false );
+	List:EnableVerticalScrollbar( true );
+	List:SetPadding( 5 );
+	function List:Paint()
+		draw.RoundedBox( 4, 0, 0, List:GetWide(), List:GetTall(), Color( 0, 0, 0, 150 ) );
+	end
+	
+	for name, base in pairs(BB.CVARS.Bools) do
+		if (base.OnMenu && !base.main && string.find( base.cvar:GetName(), "aim" )) then
+			local CheckBox = vgui.Create( "DCheckBoxLabel" );
+			CheckBox:SetText( name );
+			CheckBox:SetConVar( base.cvar:GetName() );
+			CheckBox:SetValue( base.cvar:GetBool() );
+			CheckBox:SizeToContents();
+			List:AddItem( CheckBox );
+			table.insert( UsedCVARS, base );
+		end
+	end
+	
+	local FOVSlider = vgui.Create( "DNumSlider", AimPanel );
+	FOVSlider:SetPos( 275, -15 );
+	FOVSlider:SetSize( 150, 100 );
+	FOVSlider:SetText( "Max Angle" );
+	FOVSlider:SetMin( 0 );
+	FOVSlider:SetMax( 180 );
+	FOVSlider:SetDecimals( 0 );
+	FOVSlider:SetConVar( BB.RandomPrefix.."_aimbot_max_angle" );
+	FOVSlider.Paint = function()
+		draw.RoundedBox( 4, 0, 36, FOVSlider:GetWide(), 25, Color( 0, 0, 0, 150 ) );
+	end
+	--==ESP==--
+	Label = vgui.Create( "DLabel", ESPPanel );
+	Label:SetPos( 10, 5 );
+	Label:SetColor( Color( 255, 255, 255, 255 ) );
+	Label:SetText( "ESP/Chams settings" );
+	Label:SizeToContents();
+	
+	List = vgui.Create( "DPanelList", ESPPanel );
+	List:SetPos( 10, 20 );
+	List:SetSize( 200, 200 );
+	List:SetSpacing( 5 );
+	List:EnableHorizontal( false );
+	List:EnableVerticalScrollbar( true );
+	List:SetPadding( 5 );
+	function List:Paint()
+		draw.RoundedBox( 4, 0, 0, List:GetWide(), List:GetTall(), Color( 0, 0, 0, 150 ) );
+	end
+	
+	for name, base in pairs(BB.CVARS.Bools) do
+		if (base.OnMenu && !base.main && (string.find( base.cvar:GetName(), "esp" ) || string.find( base.cvar:GetName(), "cham" ))) then
+			local CheckBox = vgui.Create( "DCheckBoxLabel" );
+			CheckBox:SetText( name );
+			CheckBox:SetConVar( base.cvar:GetName() );
+			CheckBox:SetValue( base.cvar:GetBool() );
+			CheckBox:SizeToContents();
+			List:AddItem( CheckBox );
+			table.insert( UsedCVARS, base );
+		end
+	end
+	--==MISC==--
+	Label = vgui.Create( "DLabel", MiscPanel );
+	Label:SetPos( 10, 5 );
+	Label:SetColor( Color( 255, 255, 255, 255 ) );
+	Label:SetText( "Misc settings" );
+	Label:SizeToContents();
+	
+	List = vgui.Create( "DPanelList", MiscPanel );
+	List:SetPos( 10, 20 );
+	List:SetSize( 200, 200 );
+	List:SetSpacing( 5 );
+	List:EnableHorizontal( false );
+	List:EnableVerticalScrollbar( true );
+	List:SetPadding( 5 );
+	function List:Paint()
+		draw.RoundedBox( 4, 0, 0, List:GetWide(), List:GetTall(), Color( 0, 0, 0, 150 ) );
+	end
+	
+	for name, base in pairs(BB.CVARS.Bools) do
+		if (base.OnMenu && !table.HasValue( UsedCVARS, base )) then
+			local CheckBox = vgui.Create( "DCheckBoxLabel" );
+			CheckBox:SetText( name );
+			CheckBox:SetConVar( base.cvar:GetName() );
+			CheckBox:SetValue( base.cvar:GetBool() );
+			CheckBox:SizeToContents();
+			List:AddItem( CheckBox );
+		end
 	end
 end
 
