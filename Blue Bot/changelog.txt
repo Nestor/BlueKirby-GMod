@@ -1,3 +1,6 @@
+4/27/13 - v.0.7.4 - Fixed a few glitches
+Timer is now destroyed on unloading
+
 4/26/13 - v.0.7.3 - Fixed a few minor glitches
 
 4/26/13 - v.0.7.2 - Hot fix for stupid mistake
