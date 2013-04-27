@@ -1,4 +1,4 @@
---[[BBVERSION=072
+--[[BBVERSION=073
 Made by:
  .  ....................................................................................................................
 ..MMMMMMMM8....,MM~........MMM.....NMM...MMMMMMMMMM........NMM.....MMMO..MMZ..MMMMMMMMM7....MMMMMMMMM...,MMM......MMM...
@@ -47,7 +47,7 @@ function BB.RandomString( len, numbers, special )
 		result = result..string.char( string.byte( chars, math.random( 1, string.len( chars ) ) ) );
 	end
 	
-	return tostring(result);
+	return tostring( result );
 end
 
 BB.MetaPlayer = FindMetaTable( "Player" );
@@ -97,8 +97,8 @@ BB.IsTraitor = nil;
 BB.IsTTT = false;
 BB.PrintEx = MsgC;
 BB.LatestVersion = nil;
-BB.Version = "0.7.2";
-BB.V = 72; --DO NOT EDIT THIS
+BB.Version = "0.7.3";
+BB.V = 73; --DO NOT EDIT THIS
 
 function BB.Init( )
 	--Eww this is ugly
@@ -120,7 +120,7 @@ function BB.Init( )
 			if (findpos) then
 				local version = tonumber( string.sub( HTML, findpos+10, findpos+13 ) );
 				if ( version > BB.V ) then
-					BB.Print( true, true, Color( 255, 200, 50 ), "Your version is out of date!" );
+					BB.Print( true, true, Color( 255, 200, 200 ), "Your version is out of date!" );
 					BB.LatestVersion = HTML;
 					BB.UpdateMenu();
 				else
@@ -131,7 +131,7 @@ function BB.Init( )
 		
 		function() 
 			BB.Error( "Failed checking for updates." );
-		end 
+		end
 	);
 	
 	if (BB.IsTTT) then
@@ -296,7 +296,7 @@ function BB.CreateMove( cmd )
 			BB.Recoils[BB.ply():GetActiveWeapon():EntIndex()] = BB.ply():GetActiveWeapon().Primary.Recoil;
 			BB.ply():GetActiveWeapon().Primary.Recoil = 0;
 		end
-	elseif (!BB.CVARS.Bools["No Recoil"].cvar:GetBool() && IsValid( BB.ply() ) && BB.ply():Alive() && BB.ply():Health() > 0 && IsValid( BB.ply():GetActiveWeapon() ) ) then
+	elseif (!BB.CVARS.Bools["No Recoil"].cvar:GetBool() && IsValid( BB.ply() ) && BB.ply():Alive() && BB.ply():Health() > 0 && IsValid( BB.ply():GetActiveWeapon() ) && BB.ply():GetActiveWeapon.Primary && BB.Recoils[BB.ply():GetActiveWeapon():EntIndex()] ) then
 		BB.ply():GetActiveWeapon().Primary.Recoil = BB.Recoils[BB.ply():GetActiveWeapon():EntIndex()] or 0;
 	end
 end
@@ -496,9 +496,7 @@ end
 
 timer.Create( BB.RandomString( 0, false, false ), 0.25, 0, function( )
 	if (!BB.IsTTT || GetRoundState() != 3) then 
-		if ( BB.DeadPlayers != { } ) then
-			BB.DeadPlayers = { }
-		end
+		table.Empty( BB.DeadPlayers );
 		return;
 	end
 	
@@ -753,19 +751,19 @@ function BB.UpdateMenu()
 	Label:SizeToContents();
 	Label:SetPos( Label:GetParent():GetWide()/2-Label:GetWide()/2-5, 50 );
 	
-	local HTML = vgui.Create( "HTML", Panel )
-	HTML:OpenURL( "http://bluekirbygmod.googlecode.com/svn/trunk/Blue%20Bot/changelog.txt" )
-	HTML:SetSize( HTML:GetParent():GetWide() - 50, HTML:GetParent():GetTall() - 160 )
+	local HTML = vgui.Create( "HTML", Panel );
+	HTML:OpenURL( "http://bluekirbygmod.googlecode.com/svn/trunk/Blue%20Bot/changelog.txt" );
+	HTML:SetSize( HTML:GetParent():GetWide() - 50, HTML:GetParent():GetTall() - 160 );
 	HTML:SetPos( 25, 100 )
 	HTML.Paint = function()
 		surface.SetDrawColor( Color( 255, 255, 255, 255 ) );
 		surface.DrawRect( 0, 0, HTML:GetWide(), HTML:GetTall() );
 	end
 	
-	local Button = vgui.Create( "DButton", Panel )
-	Button:SetText( "Save" )
-	Button:SetSize( Button:GetParent():GetWide() - 50, 25 )
-	Button:SetPos( 25, Button:GetParent():GetTall() - 30 )
+	local Button = vgui.Create( "DButton", Panel );
+	Button:SetText( "Save" );
+	Button:SetSize( Button:GetParent():GetWide() - 50, 25 );
+	Button:SetPos( 25, Button:GetParent():GetTall() - 30 );
 	Button.DoClick = function()
 		HTML:SetVisible( false );
 		Panel:SetSize( 400, 150 );
@@ -791,8 +789,9 @@ concommand.Add( BB.RandomPrefix.."_unload", function( ply, cmd, args )
 		hook.Remove( BB.RandomHooks.hook[i], BB.RandomHooks.name[i] );
 		BB.Print( true, true, Color( 255, 255, 255 ), "Unhooked "..BB.RandomHooks.hook[i].." using name "..BB.RandomHooks.name[i] );
 	end
-	concommand.Remove( BB.RandomPrefix.."_unload" )
-	concommand.Remove( BB.RandomPrefix.."_menu" )
+	
+	concommand.Remove( BB.RandomPrefix.."_unload" );
+	concommand.Remove( BB.RandomPrefix.."_menu" );
 	BB.Print( true, true, Color( 255, 255, 255 ), "Unloaded successfully!" );
 end );
 

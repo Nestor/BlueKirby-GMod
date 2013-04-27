@@ -1,3 +1,5 @@
+4/26/13 - v.0.7.3 - Fixed a few minor glitches
+
 4/26/13 - v.0.7.2 - Hot fix for stupid mistake
 
 4/26/13 - v.0.7.1 - Added spectator feature by request
