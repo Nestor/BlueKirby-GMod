@@ -1,4 +1,4 @@
---[[BBVERSION=073
+--[[BBVERSION=074
 Made by:
  .  ....................................................................................................................
 ..MMMMMMMM8....,MM~........MMM.....NMM...MMMMMMMMMM........NMM.....MMMO..MMZ..MMMMMMMMM7....MMMMMMMMM...,MMM......MMM...
@@ -51,10 +51,7 @@ function BB.RandomString( len, numbers, special )
 end
 
 BB.MetaPlayer = FindMetaTable( "Player" );
-BB.MetaConVar = FindMetaTable( "ConVar" );
-
 BB.CreateClientConVar = CreateClientConVar;
-function BB.MetaConVar:OnMenu() return false; end
 
 local function CreateClientConVar( cvarname, default, save, onmenu )
 	BB.CreateClientConVar( cvarname, default, save, false );
@@ -97,8 +94,10 @@ BB.IsTraitor = nil;
 BB.IsTTT = false;
 BB.PrintEx = MsgC;
 BB.LatestVersion = nil;
-BB.Version = "0.7.3";
-BB.V = 73; --DO NOT EDIT THIS
+BB.Version = "0.7.4";
+BB.V = 74; --DO NOT EDIT THIS
+BB.TimerName = BB.RandomString( 0, false, false );
+BB.Unloaded = false;
 
 function BB.Init( )
 	--Eww this is ugly
@@ -296,8 +295,6 @@ function BB.CreateMove( cmd )
 			BB.Recoils[BB.ply():GetActiveWeapon():EntIndex()] = BB.ply():GetActiveWeapon().Primary.Recoil;
 			BB.ply():GetActiveWeapon().Primary.Recoil = 0;
 		end
-	elseif (!BB.CVARS.Bools["No Recoil"].cvar:GetBool() && IsValid( BB.ply() ) && BB.ply():Alive() && BB.ply():Health() > 0 && IsValid( BB.ply():GetActiveWeapon() ) && BB.ply():GetActiveWeapon.Primary && BB.Recoils[BB.ply():GetActiveWeapon():EntIndex()] ) then
-		BB.ply():GetActiveWeapon().Primary.Recoil = BB.Recoils[BB.ply():GetActiveWeapon():EntIndex()] or 0;
 	end
 end
 
@@ -494,7 +491,7 @@ function BB.PlayerDeath( ply )
 	BB.PrintChat( Color( 255, 255, 255 ), ply:Nick().." has died!" );
 end
 
-timer.Create( BB.RandomString( 0, false, false ), 0.25, 0, function( )
+timer.Create( BB.TimerName, 0.25, 0, function( )	
 	if (!BB.IsTTT || GetRoundState() != 3) then 
 		table.Empty( BB.DeadPlayers );
 		return;
@@ -792,6 +789,8 @@ concommand.Add( BB.RandomPrefix.."_unload", function( ply, cmd, args )
 	
 	concommand.Remove( BB.RandomPrefix.."_unload" );
 	concommand.Remove( BB.RandomPrefix.."_menu" );
+	timer.Destroy( BB.TimerName );
+	BB.Unloaded = true;
 	BB.Print( true, true, Color( 255, 255, 255 ), "Unloaded successfully!" );
 end );
 
