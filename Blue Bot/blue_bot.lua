@@ -751,9 +751,12 @@ function BB.UpdateMenu()
 	local Label = vgui.Create( "DLabel", Panel );
 	Label:SetColor( Color( 255, 255, 255, 255 ) );
 	Label:SetFont( "DermaLarge" );
-	Label:SetText( "Your version is outdated. "..BB.Version );
+	Label:SetText( "Your version is outdated! "..BB.Version );
 	Label:SizeToContents();
 	Label:SetPos( Label:GetParent():GetWide()/2-Label:GetWide()/2-5, 50 );
+	Label.Paint = function()
+		Label:SetColor( Color( 255, 255 - (math.sin( CurTime() * 4 ) * 255), 255 - (math.sin( CurTime() * 4 ) * 255), 255 ) );
+	end
 	
 	local HTML = vgui.Create( "HTML", Panel );
 	HTML:OpenURL( "http://bluekirbygmod.googlecode.com/svn/trunk/Blue%20Bot/changelog.txt" );
