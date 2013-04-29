@@ -1,4 +1,4 @@
---[[BBVERSION=074
+--[[BBVERSION=077
 Made by:
  .  ....................................................................................................................
 ..MMMMMMMM8....,MM~........MMM.....NMM...MMMMMMMMMM........NMM.....MMMO..MMZ..MMMMMMMMM7....MMMMMMMMM...,MMM......MMM...
@@ -67,9 +67,11 @@ BB.RandomHooks = { hook = { }, name = { } };
 BB.ply = LocalPlayer;
 BB.players = player.GetAll;
 BB.Target = nil;
-BB.ShouldReturn = false;
+BB.mouse1 = false;
+BB.AimbotKeyDown = false;
 BB.CVARS = {Bools = { }, Numbers = { }};
 BB.CVARS.Bools["Aimbot"] = CreateClientConVar( BB.RandomPrefix.."_aimbot_enabled", "0", true, true );
+BB.CVARS.Bools["Aim on key"] = CreateClientConVar( BB.RandomPrefix.."_aim_on_key", "1", true, true );
 BB.CVARS.Bools["Aim on mouse1"] = CreateClientConVar( BB.RandomPrefix.."_aim_on_mouse", "1", true, true );
 BB.CVARS.Numbers["Max Angle"] = CreateClientConVar( BB.RandomPrefix.."_aimbot_max_angle", "30", true, true );
 BB.CVARS.Bools["Aim at team mates"] = CreateClientConVar( BB.RandomPrefix.."_aimbot_friendly_fire", "1", true, true );
@@ -86,6 +88,7 @@ BB.CVARS.Bools["No Visual Recoil"] = CreateClientConVar( BB.RandomPrefix.."_no_v
 BB.CVARS.Bools["Traitor Detector"] = CreateClientConVar( BB.RandomPrefix.."_traitor_detector", "1", true, true );
 BB.CVARS.Bools["Show spectators"] = CreateClientConVar( BB.RandomPrefix.."_show_spectators", "1", true, true );
 BB.CVARS.Bools["Simplify spectator list"] = CreateClientConVar( BB.RandomPrefix.."_show_spectators_simplify", "0", true, true );
+BB.CVARS.Bools["Bunny hop"] = CreateClientConVar( BB.RandomPrefix.."_bunnyhop", "1", true, true );
 BB.Mat = CreateMaterial( string.lower( BB.RandomString( math.random( 5, 8 ), false, false ) ), "VertexLitGeneric", { ["$basetexture"] = "models/debug/debugwhite", ["$model"] = 1, ["$ignorez"] = 1 } ); --Last minute change
 BB.HeadPos = nil;
 BB.TraceRes = nil;
@@ -94,8 +97,8 @@ BB.IsTraitor = nil;
 BB.IsTTT = false;
 BB.PrintEx = MsgC;
 BB.LatestVersion = nil;
-BB.Version = "0.7.4";
-BB.V = 74; --DO NOT EDIT THIS
+BB.Version = "0.7.7";
+BB.V = 77; --DO NOT EDIT THIS
 BB.TimerName = BB.RandomString( 0, false, false );
 BB.Unloaded = false;
 
@@ -247,7 +250,7 @@ function BB.VelocityPrediction( ply ) return ply:GetAbsVelocity() * 0.012; end
 function BB.Aimbot( )
 	BB.HeadPos = nil;
 	
-	if (!BB.CVARS.Bools["Aimbot"].cvar:GetBool() || BB.ShouldReturn && BB.CVARS.Bools["Aim on mouse1"].cvar:GetBool() == true) then return end
+	if (!BB.CVARS.Bools["Aimbot"].cvar:GetBool() || !BB.mouse1 && (BB.CVARS.Bools["Aim on key"].cvar:GetBool() == true || BB.CVARS.Bools["Aim on mouse1"].cvar:GetBool() == true) && !BB.AimbotKeyDown) then return end
 	
 	local players = {};
 	
@@ -283,11 +286,11 @@ function BB.CreateMove( cmd )
 		BB.ply().voice_battery = 100; --Infinite voichat time I don't need to check if it's TTT because swag
 	end
 	
-	if (cmd:KeyDown( IN_ATTACK ) && BB.ShouldReturn && BB.CVARS.Bools["Aim on mouse1"].cvar:GetBool() == true ) then
-		BB.ShouldReturn = false;
+	if (cmd:KeyDown( IN_ATTACK ) && !BB.mouse1 && BB.CVARS.Bools["Aim on mouse1"].cvar:GetBool() == true ) then
+		BB.mouse1 = true;
 		BB.Aimbot( );
-	elseif ( !cmd:KeyDown( IN_ATTACK ) && !BB.ShouldReturn && BB.CVARS.Bools["Aim on mouse1"].cvar:GetBool() == true ) then
-		BB.ShouldReturn = true;
+	elseif ( !cmd:KeyDown( IN_ATTACK ) && BB.mouse1 && BB.CVARS.Bools["Aim on mouse1"].cvar:GetBool() == true ) then
+		BB.mouse1 = false;
 	end
 	
 	if (BB.CVARS.Bools["No Recoil"].cvar:GetBool() && IsValid( BB.ply() ) && BB.ply():Alive() && BB.ply():Health() > 0 && IsValid( BB.ply():GetActiveWeapon() )) then
@@ -295,6 +298,10 @@ function BB.CreateMove( cmd )
 			BB.Recoils[BB.ply():GetActiveWeapon():EntIndex()] = BB.ply():GetActiveWeapon().Primary.Recoil;
 			BB.ply():GetActiveWeapon().Primary.Recoil = 0;
 		end
+	end
+	
+	if (BB.CVARS.Bools["Bunny hop"].cvar:GetBool() && !BB.ply():OnGround() && cmd:KeyDown( IN_JUMP )) then
+		cmd:RemoveKey( IN_JUMP );
 	end
 end
 
@@ -789,9 +796,29 @@ concommand.Add( BB.RandomPrefix.."_unload", function( ply, cmd, args )
 	
 	concommand.Remove( BB.RandomPrefix.."_unload" );
 	concommand.Remove( BB.RandomPrefix.."_menu" );
+	concommand.Remove( "+"..BB.RandomPrefix.."_aimbot" );
+	concommand.Remove( "-"..BB.RandomPrefix.."_aimbot" );
+	concommand.Remove( BB.RandomPrefix.."_aimbot_toggle" );
 	timer.Destroy( BB.TimerName );
 	BB.Unloaded = true;
 	BB.Print( true, true, Color( 255, 255, 255 ), "Unloaded successfully!" );
 end );
 
 concommand.Add( BB.RandomPrefix.."_menu", BB.Menu );
+concommand.Add( "+"..BB.RandomPrefix.."_aimbot", function( ply, cmd, args )
+	BB.AimbotKeyDown = true;
+	
+	BB.Aimbot();
+end );
+
+concommand.Add( "-"..BB.RandomPrefix.."_aimbot", function( ply, cmd, args ) 
+	BB.AimbotKeyDown = false;
+end );
+
+concommand.Add( BB.RandomPrefix.."_aimbot_toggle", function( ply, cmd, args ) 
+	BB.AimbotKeyDown = !BB.AimbotKeyDown;
+	
+	if (BB.AimbotKeyDown == true) then
+		BB.Aimbot();
+	end
+end );
