@@ -1,4 +1,4 @@
---[[BBVERSION=077
+--[[BBVERSION=078
 Made by:
  .  ....................................................................................................................
 ..MMMMMMMM8....,MM~........MMM.....NMM...MMMMMMMMMM........NMM.....MMMO..MMZ..MMMMMMMMM7....MMMMMMMMM...,MMM......MMM...
@@ -27,9 +27,9 @@ local BB = { };
 --Try using like llama or catpenis just nothing with hack or bot in the name
 
 --Default to nil if you want to use a random prefix
------------------------
+-----------------------------
 BB.CustomPrefix = "bluebot";
------------------------
+-----------------------------
 
 -------------------------------------------------------
 --Don't edit below unless you know what you are doing--
@@ -91,14 +91,15 @@ BB.CVARS.Bools["Simplify spectator list"] = CreateClientConVar( BB.RandomPrefix.
 BB.CVARS.Bools["Bunny hop"] = CreateClientConVar( BB.RandomPrefix.."_bunnyhop", "1", true, true );
 BB.Mat = CreateMaterial( string.lower( BB.RandomString( math.random( 5, 8 ), false, false ) ), "VertexLitGeneric", { ["$basetexture"] = "models/debug/debugwhite", ["$model"] = 1, ["$ignorez"] = 1 } ); --Last minute change
 BB.HeadPos = nil;
+BB.JumpReleased = false;
 BB.TraceRes = nil;
 BB.Font = nil;
 BB.IsTraitor = nil;
 BB.IsTTT = false;
 BB.PrintEx = MsgC;
 BB.LatestVersion = nil;
-BB.Version = "0.7.7";
-BB.V = 77; --DO NOT EDIT THIS
+BB.Version = "0.7.8";
+BB.V = 78; --DO NOT EDIT THIS
 BB.TimerName = BB.RandomString( 0, false, false );
 BB.Unloaded = false;
 
@@ -300,8 +301,16 @@ function BB.CreateMove( cmd )
 		end
 	end
 	
-	if (BB.CVARS.Bools["Bunny hop"].cvar:GetBool() && !BB.ply():OnGround() && cmd:KeyDown( IN_JUMP )) then
-		cmd:RemoveKey( IN_JUMP );
+	if (cmd:KeyDown( IN_JUMP )) then --Credits to gir489 original code for TF2
+		if (!BB.JumpReleased) then
+			if (BB.CVARS.Bools["Bunny hop"].cvar:GetBool() && !BB.ply():OnGround()) then
+				cmd:RemoveKey( IN_JUMP );
+			end
+		else
+			BB.JumpReleased = false
+		end
+	elseif (!BB.JumpReleased) then
+		BB.JumpReleased = true;
 	end
 end
 

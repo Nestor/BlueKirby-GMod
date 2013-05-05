@@ -1,4 +1,6 @@
-4/29/13 - v.0.7.7 - Added bunnyhopping
+5/5/13 - v.0.7.8 - Fixed bunny-hopping glitch
+
+4/29/13 - v.0.7.7 - Added bunny-hopping
 Added aim key +(prefix)_aimbot
 Added aimbot toggle (prefix)_aimbot_toggle
 
