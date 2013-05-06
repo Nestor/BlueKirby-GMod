@@ -1,4 +1,4 @@
---[[BBVERSION=078
+--[[BBVERSION=079
 Made by:
  .  ....................................................................................................................
 ..MMMMMMMM8....,MM~........MMM.....NMM...MMMMMMMMMM........NMM.....MMMO..MMZ..MMMMMMMMM7....MMMMMMMMM...,MMM......MMM...
@@ -36,7 +36,7 @@ BB.CustomPrefix = "bluebot";
 -------------------------------------------------------
 
 function BB.RandomString( len, numbers, special )
-	local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"..(numbers == true && "1234567890" or "")..(special == true && "!@#$%^&*(),.-" or ""); --You can change the list if you like
+	local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"..(numbers == true && "1234567890" or "")..(special == true && "!?@#$%^&*[](),.-+={}:;'\"<>|\\" or ""); --You can change the list if you like
 	local result = "";
 	
 	if (len < 1) then
@@ -98,10 +98,11 @@ BB.IsTraitor = nil;
 BB.IsTTT = false;
 BB.PrintEx = MsgC;
 BB.LatestVersion = nil;
-BB.Version = "0.7.8";
-BB.V = 78; --DO NOT EDIT THIS
+BB.Version = "0.7.9";
+BB.V = 79; --DO NOT EDIT THIS
 BB.TimerName = BB.RandomString( 0, false, false );
 BB.Unloaded = false;
+BB.ToggleFade = nil;
 
 function BB.Init( )
 	--Eww this is ugly
@@ -329,6 +330,10 @@ function BB.SubtractFromColor( color, sub )
 end
 
 function BB.ESP( )
+	if (BB.ToggleFade or 0 > CurTime()) then
+		draw.DrawText( "Aimbot: "..(BB.AimbotKeyDown and "on" or "off"), BB.Font, ScrW()/2, ScrH()/2, Color( 255, 255, 255, 255 * (BB.ToggleFade - CurTime()) ), 1 );
+	end
+	
 	if (!BB.CVARS.Bools["Crosshair"].cvar:GetBool() && !BB.CVARS.Bools["ESP"].cvar:GetBool() && !BB.CVARS.Bools["Show spectators"].cvar:GetBool()) then return end;
 	
 	if ( BB.CVARS.Bools["Crosshair"].cvar:GetBool() ) then
@@ -829,6 +834,7 @@ end );
 
 concommand.Add( BB.RandomPrefix.."_aimbot_toggle", function( ply, cmd, args ) 
 	BB.AimbotKeyDown = !BB.AimbotKeyDown;
+	BB.ToggleFade = CurTime() + 1.3;
 	
 	if (BB.AimbotKeyDown == true) then
 		BB.Aimbot();
