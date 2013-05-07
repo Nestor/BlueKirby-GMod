@@ -1,4 +1,4 @@
---[[BBVERSION=079
+--[[BBVERSION=080
 Made by:
  .  ....................................................................................................................
 ..MMMMMMMM8....,MM~........MMM.....NMM...MMMMMMMMMM........NMM.....MMMO..MMZ..MMMMMMMMM7....MMMMMMMMM...,MMM......MMM...
@@ -80,7 +80,11 @@ BB.CVARS.Bools["ESP"] = CreateClientConVar( BB.RandomPrefix.."_esp_enabled", "1"
 BB.CVARS.Bools["ESP: Show health"] = CreateClientConVar( BB.RandomPrefix.."_esp_show_health", "1", true, true );
 BB.CVARS.Bools["ESP: Show weapon"] = CreateClientConVar( BB.RandomPrefix.."_esp_show_weapon", "1", true, true );
 BB.CVARS.Bools["ESP: Show name"] = CreateClientConVar( BB.RandomPrefix.."_esp_show_name", "1", true, true );
-BB.CVARS.Bools["ESP: Show traitors"] = CreateClientConVar( BB.RandomPrefix.."_esp_show_traitors", "1", true, true );
+BB.CVARS.Bools["ESP: TTT Show traitors"] = CreateClientConVar( BB.RandomPrefix.."_esp_show_traitors", "1", true, true );
+BB.CVARS.Bools["ESP: TTT Show dead bodies"] = CreateClientConVar( BB.RandomPrefix.."_esp_show_dead_bodies", "1", true, true );
+BB.CVARS.Bools["ESP: TTT Show C4"] = CreateClientConVar( BB.RandomPrefix.."_esp_show_c4", "1", true, true );
+BB.CVARS.Bools["ESP: GMODZ Show items"] = CreateClientConVar( BB.RandomPrefix.."_esp_show_gmodz_items", "1", true, true );
+BB.CVARS.Bools["ESP: GMODZ Show inventories"] = CreateClientConVar( BB.RandomPrefix.."_esp_show_gmodz_inventories", "1", true, true );
 BB.CVARS.Bools["Chams"] = CreateClientConVar( BB.RandomPrefix.."_chams_enabled", "1", true, true );
 BB.CVARS.Bools["Crosshair"] = CreateClientConVar( BB.RandomPrefix.."_crosshair_enabled", "1", true, true );
 BB.CVARS.Bools["No Recoil"] = CreateClientConVar( BB.RandomPrefix.."_no_recoil", "1", true, true );
@@ -96,10 +100,11 @@ BB.TraceRes = nil;
 BB.Font = nil;
 BB.IsTraitor = nil;
 BB.IsTTT = false;
+BB.IsGmodZ = false;
 BB.PrintEx = MsgC;
 BB.LatestVersion = nil;
-BB.Version = "0.7.9";
-BB.V = 79; --DO NOT EDIT THIS
+BB.Version = "0.8.0";
+BB.V = 80; --DO NOT EDIT THIS
 BB.TimerName = BB.RandomString( 0, false, false );
 BB.Unloaded = false;
 BB.ToggleFade = nil;
@@ -109,6 +114,7 @@ function BB.Init( )
 	BB.Font = BB.RandomString( 0, false, false );
 	surface.CreateFont( BB.Font, { font = "Arial", size = 14, weight = 750, antialias = false, outline = true } );
 	BB.IsTTT = string.find( GAMEMODE.Name , "Terror" );
+	BB.IsGmodZ = ( string.lower( GAMEMODE.Name ) == "gmodz" );
 	
 	RunConsoleCommand( "showconsole" );
 	Msg( "\n\n\n" );
@@ -329,7 +335,7 @@ function BB.SubtractFromColor( color, sub )
 	return color - sub >= 0 and color - sub or color - sub + 255
 end
 
-function BB.ESP( )
+function BB.ESP( ) 
 	if (BB.ToggleFade or 0 > CurTime()) then
 		draw.DrawText( "Aimbot: "..(BB.AimbotKeyDown and "on" or "off"), BB.Font, ScrW()/2, ScrH()/2, Color( 255, 255, 255, 255 * (BB.ToggleFade - CurTime()) ), 1 );
 	end
@@ -337,7 +343,7 @@ function BB.ESP( )
 	if (!BB.CVARS.Bools["Crosshair"].cvar:GetBool() && !BB.CVARS.Bools["ESP"].cvar:GetBool() && !BB.CVARS.Bools["Show spectators"].cvar:GetBool()) then return end;
 	
 	if ( BB.CVARS.Bools["Crosshair"].cvar:GetBool() ) then
-		surface.SetDrawColor(Color(255, 255, 255))
+		surface.SetDrawColor( Color( 255, 255, 255 ) );
 		surface.DrawLine( ScrW()/2-10, ScrH()/2, ScrW()/2-4, ScrH()/2 );
 		surface.DrawLine( ScrW()/2+10, ScrH()/2, ScrW()/2+4, ScrH()/2 );
 		surface.DrawLine( ScrW()/2, ScrH()/2-10, ScrW()/2, ScrH()/2-4 );
@@ -385,7 +391,7 @@ function BB.ESP( )
 				draw.DrawText( ply:Nick(), BB.Font, pos.x, pos.y-height/2, ( BB.IsTTT && ply:IsTraitor() ) and Color( 255, 150, 150, 255 ) or Color( 255, 255, 255, 255 ), 1 );
 			end
 
-			if ( BB.IsTTT && BB.CVARS.Bools["ESP: Show traitors"].cvar:GetBool() && ply:IsTraitor() ) then
+			if ( BB.IsTTT && BB.CVARS.Bools["ESP: TTT Show traitors"].cvar:GetBool() && ply:IsTraitor() ) then
 				local width, height = surface.GetTextSize( "TRAITOR" );
 				draw.DrawText( "TRAITOR", BB.Font, pos.x, pos.y-height-3, Color( 255, 0, 0, 255 ), 1 );
 			end
@@ -405,27 +411,52 @@ function BB.ESP( )
 		end
 	end
 	
-	for _, ent in pairs( ents.FindByClass( "ttt_c4" ) ) do
-		if (!BB.IsTTT) then break; end
-		
-		local pos = ent:GetPos():ToScreen();
-		
-		local width, height = surface.GetTextSize( "C4" );
-		draw.DrawText( !ent:GetArmed() and "C4 - Unarmed" or "C4 - "..string.FormattedTime(ent:GetExplodeTime() - CurTime(), "%02i:%02i"), BB.Font, pos.x, pos.y-height/2, Color( 255, 255, 255, 255 ), 1 );
-	end
-	
 	if (BB.IsTTT) then
-		for _, ent in pairs( ents.FindByClass( "prop_ragdoll" ) ) do
-			local name = CORPSE.GetPlayerNick(ent, false)
-			if ( name != false ) then
-				local pos = ent:GetPos():ToScreen();
-				local width, height = surface.GetTextSize( name );
-				
-				draw.DrawText( name, BB.Font, pos.x, pos.y-height/2, Color( 255, 255, 255, 255 ), 1 );
-				
-				if ( !CORPSE.GetFound(ent, false) ) then
-					draw.DrawText( "Unidentified", BB.Font, pos.x, pos.y-height/2+12, Color( 200, 200, 0, 255 ), 1 );
+		if (BB.CVARS.Bools["ESP: TTT Show C4"].cvar:GetBool()) then
+			for _, ent in pairs( ents.FindByClass( "ttt_c4" ) ) do
+				if (!BB.ply():IsTraitor() or !ent:GetArmed()) then
+					local pos = ent:GetPos():ToScreen();
+					local width, height = surface.GetTextSize( "C4" );
+					
+					draw.DrawText( !ent:GetArmed() and "C4 - Unarmed" or "C4 - "..string.FormattedTime(ent:GetExplodeTime() - CurTime(), "%02i:%02i"), BB.Font, pos.x, pos.y-height/2, Color( 255, 200, 200, 255 ), 1 );
 				end
+			end
+		end
+		
+		if (BB.CVARS.Bools["ESP: TTT Show dead bodies"].cvar:GetBool()) then
+			for _, ent in pairs( ents.FindByClass( "prop_ragdoll" ) ) do
+				local name = CORPSE.GetPlayerNick( ent, false );
+				
+				if ( name != false ) then
+					local pos = ent:GetPos():ToScreen();
+					local width, height = surface.GetTextSize( name );
+					
+					draw.DrawText( name, BB.Font, pos.x, pos.y-height/2, Color( 255, 255, 255, 255 ), 1 );
+					
+					if ( !CORPSE.GetFound(ent, false) ) then
+						draw.DrawText( "Unidentified", BB.Font, pos.x, pos.y-height/2+12, Color( 200, 200, 0, 255 ), 1 );
+					end
+				end
+			end
+		end
+	end
+
+	if (BB.IsGmodZ) then
+		for _, ent in pairs( ents.FindByClass( "gmodz_item" ) ) do
+			if (ent.id) then
+				local item = items[ent.id];
+				
+				if (item) then
+					local name = item.name or "ERROR";
+					local pos = ent:GetPos():ToScreen();
+					local width, height = surface.GetTextSize( name );
+					
+					draw.DrawText( name, BB.Font, pos.x, pos.y-height/2, Color( 255, 255, 220, 255 ), 1 );
+				end
+			else
+				net.Start( "item_ask_info" );
+					net.WriteEntity( ent );
+				net.SendToServer();
 			end
 		end
 	end
@@ -441,7 +472,7 @@ end
 function BB.Chams()
 	if (BB.CVARS.Bools["Chams"].cvar:GetBool()) then
 		for _, ply in pairs( BB.GetPlayersByDistance( ) ) do
-			if (IsValid( ply ) && ply:Alive() && ply:Health() > 0 && ply:Team() != TEAM_SPECTATOR) then
+			if (ply != BB.ply() && IsValid( ply ) && ply:Alive() && ply:Health() > 0 && ply:Team() != TEAM_SPECTATOR) then
 				local color = (BB.IsTTT and ply:IsTraitor( )) and Color( 200, 50, 50 ) or team.GetColor( ply:Team( ) );
 				
 				cam.Start3D( BB.ply():EyePos(), BB.ply():EyeAngles() );
