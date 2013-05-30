@@ -1,3 +1,5 @@
+5/30/13 -  v.0.8.2 - Fixed check for auto pistol
+
 5/30/13 -  v.0.8.1 - Added trigger bot
 Added auto pistol
 Added usergroup to ESP

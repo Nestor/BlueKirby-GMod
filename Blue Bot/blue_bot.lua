@@ -1,4 +1,4 @@
---[[BBVERSION=081
+--[[BBVERSION=082
 Made by:
  .  ....................................................................................................................
 ..MMMMMMMM8....,MM~........MMM.....NMM...MMMMMMMMMM........NMM.....MMMO..MMZ..MMMMMMMMM7....MMMMMMMMM...,MMM......MMM...
@@ -110,8 +110,8 @@ BB.IsTTT = false;
 BB.IsGmodZ = false;
 BB.PrintEx = MsgC;
 BB.LatestVersion = nil;
-BB.Version = "0.8.1";
-BB.V = 81; --DO NOT EDIT THIS
+BB.Version = "0.8.2";
+BB.V = 82; --DO NOT EDIT THIS
 BB.TimerName = BB.RandomString( 0, false, false );
 BB.Unloaded = false;
 BB.ToggleFade = nil;
@@ -333,7 +333,7 @@ function BB.CreateMove( cmd )
 		cmd:SetButtons( IN_ATTACK + cmd:GetButtons() );
 	end
 	
-	if (cmd:KeyDown( IN_ATTACK ) && BB.CVARS.Bools["Auto pistol"].cvar:GetBool() && BB.ply():GetActiveWeapon():GetClass() != "weapon_ar2" && BB.ply():GetActiveWeapon():GetClass() != "weapon_smg1" && (!BB.ply():GetActiveWeapon().Primary or BB.ply():GetActiveWeapon().Primary.Automatic == false)) then
+	if (cmd:KeyDown( IN_ATTACK ) && BB.CVARS.Bools["Auto pistol"].cvar:GetBool() && IsValid( BB.ply():GetActiveWeapon() ) && BB.ply():GetActiveWeapon():GetClass() != "weapon_ar2" && BB.ply():GetActiveWeapon():GetClass() != "weapon_smg1" && (!BB.ply():GetActiveWeapon().Primary or BB.ply():GetActiveWeapon().Primary.Automatic == false)) then
 		if (BB.ShouldFire == 3) then
 			cmd:RemoveKey( IN_ATTACK );
 			BB.ShouldFire = 0;
