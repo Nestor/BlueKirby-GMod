@@ -1,4 +1,4 @@
---[[BBVERSION=080
+--[[BBVERSION=081
 Made by:
  .  ....................................................................................................................
 ..MMMMMMMM8....,MM~........MMM.....NMM...MMMMMMMMMM........NMM.....MMMO..MMZ..MMMMMMMMM7....MMMMMMMMM...,MMM......MMM...
@@ -69,6 +69,8 @@ BB.players = player.GetAll;
 BB.Target = nil;
 BB.mouse1 = false;
 BB.AimbotKeyDown = false;
+BB.ShouldFire = 0;
+BB.Aimbotting = false;
 BB.CVARS = {Bools = { }, Numbers = { }};
 BB.CVARS.Bools["Aimbot"] = CreateClientConVar( BB.RandomPrefix.."_aimbot_enabled", "0", true, true );
 BB.CVARS.Bools["Aim on key"] = CreateClientConVar( BB.RandomPrefix.."_aim_on_key", "1", true, true );
@@ -78,6 +80,7 @@ BB.CVARS.Bools["Aim at team mates"] = CreateClientConVar( BB.RandomPrefix.."_aim
 BB.CVARS.Bools["Aim at steam friends"] = CreateClientConVar( BB.RandomPrefix.."_aimbot_steam_friends", "0", true, true );
 BB.CVARS.Bools["ESP"] = CreateClientConVar( BB.RandomPrefix.."_esp_enabled", "1", true, true );
 BB.CVARS.Bools["ESP: Show health"] = CreateClientConVar( BB.RandomPrefix.."_esp_show_health", "1", true, true );
+BB.CVARS.Bools["ESP: Show user group (admins)"] = CreateClientConVar( BB.RandomPrefix.."_esp_show_admins", "1", true, true );
 BB.CVARS.Bools["ESP: Show weapon"] = CreateClientConVar( BB.RandomPrefix.."_esp_show_weapon", "1", true, true );
 BB.CVARS.Bools["ESP: Show name"] = CreateClientConVar( BB.RandomPrefix.."_esp_show_name", "1", true, true );
 BB.CVARS.Bools["ESP: TTT Show traitors"] = CreateClientConVar( BB.RandomPrefix.."_esp_show_traitors", "1", true, true );
@@ -93,6 +96,10 @@ BB.CVARS.Bools["Traitor Detector"] = CreateClientConVar( BB.RandomPrefix.."_trai
 BB.CVARS.Bools["Show spectators"] = CreateClientConVar( BB.RandomPrefix.."_show_spectators", "1", true, true );
 BB.CVARS.Bools["Simplify spectator list"] = CreateClientConVar( BB.RandomPrefix.."_show_spectators_simplify", "0", true, true );
 BB.CVARS.Bools["Bunny hop"] = CreateClientConVar( BB.RandomPrefix.."_bunnyhop", "1", true, true );
+BB.CVARS.Bools["Auto pistol"] = CreateClientConVar( BB.RandomPrefix.."_auto_pistol", "1", true, true );
+BB.CVARS.Bools["Trigger bot"] = CreateClientConVar( BB.RandomPrefix.."_triggerbot", "1", true, true );
+BB.CVARS.Bools["Trigger bot team mates"] = CreateClientConVar( BB.RandomPrefix.."_triggerbot_friendly_fire", "1", true, true );
+BB.CVARS.Bools["Trigger bot steam friends"] = CreateClientConVar( BB.RandomPrefix.."_triggerbot_steam_friends", "1", true, true );
 BB.Mat = CreateMaterial( string.lower( BB.RandomString( math.random( 5, 8 ), false, false ) ), "VertexLitGeneric", { ["$basetexture"] = "models/debug/debugwhite", ["$model"] = 1, ["$ignorez"] = 1 } ); --Last minute change
 BB.HeadPos = nil;
 BB.JumpReleased = false;
@@ -103,8 +110,8 @@ BB.IsTTT = false;
 BB.IsGmodZ = false;
 BB.PrintEx = MsgC;
 BB.LatestVersion = nil;
-BB.Version = "0.8.0";
-BB.V = 80; --DO NOT EDIT THIS
+BB.Version = "0.8.1";
+BB.V = 81; --DO NOT EDIT THIS
 BB.TimerName = BB.RandomString( 0, false, false );
 BB.Unloaded = false;
 BB.ToggleFade = nil;
@@ -171,14 +178,14 @@ function BB.Print( timestamp, stamp, ... )
 	local t = {...};
 	
 	if (#t == 1) then
-		BB.PrintEx( Color(255, 255, 255), t[1] );
+		BB.PrintEx( Color( 255, 255, 255 ), t[1] );
 	else
 		for i = 1, #t, 2 do
 			BB.PrintEx( t[i], t[i+1] );
 		end
 	end
 	
-	Msg('\n');
+	Msg( '\n' );
 end
 
 function BB.PrintChat( ... )
@@ -257,6 +264,7 @@ function BB.VelocityPrediction( ply ) return ply:GetAbsVelocity() * 0.012; end
 
 function BB.Aimbot( )
 	BB.HeadPos = nil;
+	BB.Aimbotting = false;
 	
 	if (!BB.CVARS.Bools["Aimbot"].cvar:GetBool() || !BB.mouse1 && (BB.CVARS.Bools["Aim on key"].cvar:GetBool() == true || BB.CVARS.Bools["Aim on mouse1"].cvar:GetBool() == true) && !BB.AimbotKeyDown) then return end
 	
@@ -275,7 +283,10 @@ function BB.Aimbot( )
 	
 	local newAngle = BB.ClosestAngle( players );
 	
-	if ( newAngle != nil ) then BB.ply():SetEyeAngles( newAngle ) end;
+	if ( newAngle != nil ) then 
+		BB.ply():SetEyeAngles( newAngle );
+		BB.Aimbotting = true;
+	end
 end
 
 function BB.TableSortByDistance( former, latter ) return latter:GetPos():Distance( BB.ply():GetPos() ) > former:GetPos():Distance( BB.ply():GetPos() ) end
@@ -306,6 +317,31 @@ function BB.CreateMove( cmd )
 			BB.Recoils[BB.ply():GetActiveWeapon():EntIndex()] = BB.ply():GetActiveWeapon().Primary.Recoil;
 			BB.ply():GetActiveWeapon().Primary.Recoil = 0;
 		end
+	end
+	
+	local triggerbot = false;
+	
+	if (BB.CVARS.Bools["Trigger bot"].cvar:GetBool()) then
+		local trace = BB.ply():GetEyeTrace();
+		
+		if (IsValid( trace.Entity ) && trace.Entity:IsPlayer() && (trace.Entity:Team() != BB.ply():Team() || BB.CVARS.Bools["Trigger bot team mates"].cvar:GetBool()) && (trace.Entity:GetFriendStatus() != "friend" || BB.CVARS.Bools["Trigger bot steam friends"].cvar:GetBool())) then
+			triggerbot = true;
+		end
+	end
+	
+	if (!cmd:KeyDown( IN_ATTACK ) && (BB.CVARS.Bools["Trigger bot"].cvar:GetBool() && BB.Aimbotting || triggerbot)) then
+		cmd:SetButtons( IN_ATTACK + cmd:GetButtons() );
+	end
+	
+	if (cmd:KeyDown( IN_ATTACK ) && BB.CVARS.Bools["Auto pistol"].cvar:GetBool() && BB.ply():GetActiveWeapon():GetClass() != "weapon_ar2" && BB.ply():GetActiveWeapon():GetClass() != "weapon_smg1" && (!BB.ply():GetActiveWeapon().Primary or BB.ply():GetActiveWeapon().Primary.Automatic == false)) then
+		if (BB.ShouldFire == 3) then
+			cmd:RemoveKey( IN_ATTACK );
+			BB.ShouldFire = 0;
+		end
+		
+		BB.ShouldFire = BB.ShouldFire + 1;
+	else
+		BB.ShouldFire = 0;
 	end
 	
 	if (cmd:KeyDown( IN_JUMP )) then --Credits to gir489 original code for TF2
@@ -386,11 +422,17 @@ function BB.ESP( )
 			
 			pos = ( pos + Vector( 0, 0, 10 ) ):ToScreen();
 			
-			if ( BB.CVARS.Bools["ESP: Show name"].cvar:GetBool() ) then
+			if ( true or BB.CVARS.Bools["ESP: Show name"].cvar:GetBool() ) then
 				local width, height = surface.GetTextSize( tostring( ply:Nick() ) ); -- I have to do tostring because sometimes errors would occur
 				draw.DrawText( ply:Nick(), BB.Font, pos.x, pos.y-height/2, ( BB.IsTTT && ply:IsTraitor() ) and Color( 255, 150, 150, 255 ) or Color( 255, 255, 255, 255 ), 1 );
 			end
-
+			
+			if ( true or BB.CVARS.Bools["ESP: Show user group (admins)"].cvar:GetBool() && ply:GetNetworkedString( "UserGroup" ) != "user" ) then
+				local width, height = surface.GetTextSize( ply:GetNetworkedString( "UserGroup" ) );
+				draw.DrawText( ply:GetNetworkedString( "UserGroup" ), BB.Font, pos.x, pos.y-height-3, Color( 255, 200, 50, 255 ), 1 );
+				pos.y = pos.y - (height - 6);
+			end
+			
 			if ( BB.IsTTT && BB.CVARS.Bools["ESP: TTT Show traitors"].cvar:GetBool() && ply:IsTraitor() ) then
 				local width, height = surface.GetTextSize( "TRAITOR" );
 				draw.DrawText( "TRAITOR", BB.Font, pos.x, pos.y-height-3, Color( 255, 0, 0, 255 ), 1 );
@@ -477,12 +519,11 @@ function BB.Chams()
 				
 				cam.Start3D( BB.ply():EyePos(), BB.ply():EyeAngles() );
 					render.SuppressEngineLighting( true );
-
 					render.SetColorModulation( color.r/255, color.g/255, color.b/255, 1 );
 					render.MaterialOverride( BB.Mat );
 					ply:DrawModel();
-					
 					render.SetColorModulation( BB.AddToColor( color.r, 150 )/255, BB.AddToColor( color.g, 150 )/255, BB.AddToColor( color.b, 150 )/255, 1 );
+					
 					if (IsValid( ply:GetActiveWeapon() )) then
 						ply:GetActiveWeapon():DrawModel() 
 					end
@@ -492,10 +533,10 @@ function BB.Chams()
 					else
 						render.SetColorModulation( 1, 1, 1, 1 );
 					end
+					
 					render.MaterialOverride();
 					render.SetModelLighting( 4, color.r/255, color.g/255, color.b/255 );
 					ply:DrawModel();
-					
 					render.SuppressEngineLighting( false );
 				cam.End3D();
 			end
