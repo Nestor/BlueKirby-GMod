@@ -1,4 +1,4 @@
---[[BBVERSION=082
+--[[BBVERSION=083
 Made by:
  .  ....................................................................................................................
 ..MMMMMMMM8....,MM~........MMM.....NMM...MMMMMMMMMM........NMM.....MMMO..MMZ..MMMMMMMMM7....MMMMMMMMM...,MMM......MMM...
@@ -110,8 +110,8 @@ BB.IsTTT = false;
 BB.IsGmodZ = false;
 BB.PrintEx = MsgC;
 BB.LatestVersion = nil;
-BB.Version = "0.8.2";
-BB.V = 82; --DO NOT EDIT THIS
+BB.Version = "0.8.3";
+BB.V = 83; --DO NOT EDIT THIS
 BB.TimerName = BB.RandomString( 0, false, false );
 BB.Unloaded = false;
 BB.ToggleFade = nil;
@@ -422,12 +422,12 @@ function BB.ESP( )
 			
 			pos = ( pos + Vector( 0, 0, 10 ) ):ToScreen();
 			
-			if ( true or BB.CVARS.Bools["ESP: Show name"].cvar:GetBool() ) then
+			if ( BB.CVARS.Bools["ESP: Show name"].cvar:GetBool() ) then
 				local width, height = surface.GetTextSize( tostring( ply:Nick() ) ); -- I have to do tostring because sometimes errors would occur
 				draw.DrawText( ply:Nick(), BB.Font, pos.x, pos.y-height/2, ( BB.IsTTT && ply:IsTraitor() ) and Color( 255, 150, 150, 255 ) or Color( 255, 255, 255, 255 ), 1 );
 			end
 			
-			if ( true or BB.CVARS.Bools["ESP: Show user group (admins)"].cvar:GetBool() && ply:GetNetworkedString( "UserGroup" ) != "user" ) then
+			if ( BB.CVARS.Bools["ESP: Show user group (admins)"].cvar:GetBool() && ply:GetNetworkedString( "UserGroup" ) != "user" ) then
 				local width, height = surface.GetTextSize( ply:GetNetworkedString( "UserGroup" ) );
 				draw.DrawText( ply:GetNetworkedString( "UserGroup" ), BB.Font, pos.x, pos.y-height-3, Color( 255, 200, 50, 255 ), 1 );
 				pos.y = pos.y - (height - 6);
