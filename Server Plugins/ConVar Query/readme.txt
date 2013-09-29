@@ -1,19 +1,24 @@
-ConVar Query
+ConVar Query readme
 
-Made by: Blue Kirby
+Credits:
+Blue Kirby
 
-Place the convar_query.dll file in your addons folder.
+Installation:
+Place the convar_query.dll along with the convar_query.vdf file in your addons folder.
 
-In your server startup parameters add +plugin_load addons/convar_query
+NOTICE:
+To try and remove the dependency on sigs I do not push the player entity as a parameter because
+it is just as easy to store the player variable and use it accordingly.
 
-In your server.cfg add (plugin_load "addons/convar_query") without parentheses.
-If you do not have a server.cfg file, make a new text file then rename to server.cfg and add that line.
 
-To use find get a player and run a query like so:
+Usage:
+--Passes the value of the cvar as the only paramater in the callback
+player:QueryConVar( cvar name <string>, callback <function> )
 
+Example scripts:
+
+--Would print "The value of the convar is 0" if sv_cheats is 0 on the client
 player.GetByID(1):QueryConVar( "sv_cheats", function( value ) print( "The value of the convar is "..value ) end )
-
-Or you can do something a bit more elaborate:
 
 local convars = { ["sv_cheats"] = "0", ["host_timescale"] = "1", ["sv_allowcslua"] = "0" };
 
