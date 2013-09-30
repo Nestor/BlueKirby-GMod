@@ -44,17 +44,43 @@ int QueryConVar( lua_State* state )
 	LUA->CheckType( 2, 4 ); // String
 	LUA->CheckType( 3, 6 ); // Function/Callback
 
-	CBaseEntity* pEnt = Get_Entity( 1, 0 ); // Get our entity off the stack
+	int iEntIndex = 0;
 
-	if (pEnt != NULL) // Make sure it's valid
-	{
-		edict_t* pEdict = sv_game_ents->BaseEntityToEdict( pEnt ); // Get our edict
-
-		if (pEdict != NULL) // Make sure it's valid
+	sv_lua->PushSpecial( 2 ); // Push the registry table onto the stack
+		sv_lua->GetField( -1, "Entity" ); // Get the entity table
+		if (sv_lua->IsType( -1, 5 )) // Make sure it's a table
 		{
-			callback_t callback; // Make a new callback
+			sv_lua->GetField( -1, "EntIndex" ); // Get the EntIndex function
+			if (sv_lua->IsType( -1, 6 )) // Make sure it's a table
+			{
+				sv_lua->Push( 1 ); // Push the entity
+				sv_lua->Call( 1, 1 ); // Call the function 
 
-			callback.iCookie = helpers->StartQueryCvarValue( pEdict, LUA->GetString( 2 ) ); // Set the cookie to our shit
+				if (sv_lua->IsType( -1, 3 )) //Make sure it's a number
+					iEntIndex = sv_lua->GetNumber( -1 ); // Get the entity index
+
+				sv_lua->Pop( 2 ); // Pop the function and return value off the stack
+			}
+			else
+				sv_lua->Pop( 2 ); // Pop the 2 fields off the stack
+		}
+		else
+			sv_lua->Pop(); // Pop the field off the stack
+	sv_lua->Pop(); // Pop the reg table off the stack
+
+	if (!iEntIndex) // No entity so we fail
+	{
+		sv_lua->PushBool( false );
+		return 1;
+	}
+
+	edict_t* pEdict = engine->PEntityOfEntIndex( iEntIndex ); // Get the edict
+
+	if (pEdict != NULL) // Make sure it's valid
+	{
+		callback_t callback; // Make a new callback
+
+		callback.iCookie = helpers->StartQueryCvarValue( pEdict, LUA->GetString( 2 ) ); // Set the cookie to our shit
 
 			if (callback.iCookie >= 1) // Make sure the query has successfully started
 			{
@@ -64,15 +90,14 @@ int QueryConVar( lua_State* state )
 				m_vCallbacks.push_back( callback ); // Push it onto our vector of callbacks
 
 				LUA->PushBool( true ); // Push the return value
-			}
-			else
-				LUA->PushBool( false ); // Push false if it fails
-
-			return 1;
 		}
+			else
+			LUA->PushBool( false ); // Push false if it fails
+
+		return 1;
 	}
 
-	LUA->PushBool( false ); // Push false since the entity was invalid
+	LUA->PushBool( false ); // Push false since the entity was invalid*/
 
 	return 1;
 }
@@ -172,14 +197,10 @@ bool CEmptyServerPlugin::Load(	CreateInterfaceFn interfaceFactory, CreateInterfa
 	helpers = (IServerPluginHelpers*)interfaceFactory(INTERFACEVERSION_ISERVERPLUGINHELPERS, NULL); // Get our helper interface (we can't call queries using the engine interface)
 
 	CreateInterfaceFn LuaFactory = Sys_GetFactory( "lua_shared.dll" ); // Get the CreateInterface from lua_shared so we can get the CLuaShared interface
-	CreateInterfaceFn ServerFactory = Sys_GetFactory( "server.dll" ); // Get the server.dll interface so we can get the server game ents interface
 
 	luashared = (CLuaShared*)LuaFactory( "LUASHARED003", NULL ); // Get the CLuaShared interface
-	sv_game_ents = (IServerGameEnts*)ServerFactory(INTERFACEVERSION_SERVERGAMEENTS, NULL ); // Get the server game entites interface
-	// Sig scanning, I'm lazy and didn't reduce the size of the sig, sue me.
-	Get_Entity = (Get_EntityFn)dwFindPattern( (DWORD)GetModuleHandle( "server.dll" ), 0x240000, (PBYTE)"\x55\x8B\xEC\x8B\x0D\x00\x00\x00\x00\x8B\x01\x8B\x90\x00\x00\x00\x00\x56\x57\x8B\x7D\x08\x6A\x09\x57\x8B\xF1\xFF\xD2\x84\xC0\x75\x04\x33\xF6", "xxxxx????xxxx????xxxxxxxxxxxxxxxxxx" );
-
-	if(	! ( engine && helpers && luashared && sv_game_ents && Get_Entity ) ) // Make sure we have all of our interfaces and functions
+	
+	if(	! ( engine && helpers && luashared ) ) // Make sure we have all of our interfaces and functions
 	{
 		return false; // Make the loading fail
 	}
