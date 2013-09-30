@@ -24,7 +24,6 @@
 #include "tier2/tier2.h"
 #include "game/server/iplayerinfo.h"
 #include "sdk.h"
-#include "xorstr.h"
 #include <vector>
 
 #include "tier0/memdbgon.h"
