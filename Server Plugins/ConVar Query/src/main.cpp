@@ -1,13 +1,15 @@
 //===== Copyright © 1996-2008, Valve Corporation, All rights reserved. ======//
 //
-// Purpose: 
+// Purpose: Get the value of convars from clients without the need for
+// client side lua. 
+//
+// Credits: Blue Kirby
 //
 // $NoKeywords: $
 //
 //===========================================================================//
 
-#include <stdio.h>
-
+#include <Windows.h>
 
 #include <stdio.h>
 #include "interface.h"
@@ -21,26 +23,123 @@
 #include "engine/IEngineTrace.h"
 #include "tier2/tier2.h"
 #include "game/server/iplayerinfo.h"
+#include "sdk.h"
+#include <vector>
 
-// Uncomment this to compile the sample TF2 plugin code, note: most of this is duplicated in serverplugin_tony, but kept here for reference!
-//#define SAMPLE_TF2_PLUGIN
-// memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 // Interfaces from the engine
 IVEngineServer	*engine = NULL; // helper functions (messaging clients, loading content, making entities, running commands, etc)
-IGameEventManager *gameeventmanager = NULL; // game events interface
-IPlayerInfoManager *playerinfomanager = NULL; // game dll interface to interact with players
-IBotManager *botmanager = NULL; // game dll interface to interact with bots
 IServerPluginHelpers *helpers = NULL; // special 3rd party plugin helpers from the engine
-IUniformRandomStream *randomStr = NULL;
-IEngineTrace *enginetrace = NULL;
+CLuaShared* luashared = NULL; // lua shared interface to get the ILuaInterface
+ILuaInterface* sv_lua = NULL; // iluainterface for lua stack manipulation
+IServerGameEnts* sv_game_ents = NULL; // for converting the entity into an edict
+IPlayerInfoManager* playerinfomanager = NULL; // player info manager for getting globals
 
+CGlobalVars *gpGlobals = NULL; // globals for curtime
 
-CGlobalVars *gpGlobals = NULL;
+std::vector<callback_t> m_vCallbacks; // vector of callbacks
 
-// function to initialize any cvars/command in this plugin
-void Bot_RunAll( void ); 
+int QueryConVar( lua_State* state )
+{
+	LUA->CheckType( 1, 9 ); // Player
+	LUA->CheckType( 2, 4 ); // String
+	LUA->CheckType( 3, 6 ); // Function/Callback
+
+	int iEntIndex = 0;
+
+	sv_lua->PushSpecial( 2 ); // Push the registry table onto the stack
+		sv_lua->GetField( -1, "Entity" ); // Get the entity table
+		if (sv_lua->IsType( -1, 5 )) // Make sure it's a table
+		{
+			sv_lua->GetField( -1, "EntIndex" ); // Get the EntIndex function
+			if (sv_lua->IsType( -1, 6 )) // Make sure it's a table
+			{
+				sv_lua->Push( 1 ); // Push the entity
+				sv_lua->Call( 1, 1 ); // Call the function 
+
+				if (sv_lua->IsType( -1, 3 )) //Make sure it's a number
+					iEntIndex = sv_lua->GetNumber( -1 ); // Get the entity index
+
+				sv_lua->Pop( 2 ); // Pop the function and return value off the stack
+			}
+			else
+				sv_lua->Pop( 2 ); // Pop the 2 fields off the stack
+		}
+		else
+			sv_lua->Pop(); // Pop the field off the stack
+	sv_lua->Pop(); // Pop the reg table off the stack
+
+	if (!iEntIndex) // No entity so we fail
+	{
+		sv_lua->PushBool( false );
+		return 1;
+	}
+
+	edict_t* pEdict = engine->PEntityOfEntIndex( iEntIndex ); // Get the edict
+
+	if (pEdict != NULL) // Make sure it's valid
+	{
+		callback_t callback; // Make a new callback
+
+		callback.iCookie = helpers->StartQueryCvarValue( pEdict, LUA->GetString( 2 ) ); // Set the cookie to our shit
+		callback.flExpire = gpGlobals->curtime + 5.0; // Set the callback to expire in 5 seconds
+
+			if (callback.iCookie >= 1) // Make sure the query has successfully started
+			{
+				LUA->Push( 3 ); // Push the callback
+				callback.iCallback = LUA->ReferenceCreate(); // Create a reference to it for later use
+
+				m_vCallbacks.push_back( callback ); // Push it onto our vector of callbacks
+
+				LUA->PushBool( true ); // Push the return value
+		}
+			else
+			LUA->PushBool( false ); // Push false if it fails
+
+		return 1;
+	}
+
+	LUA->PushBool( false ); // Push false since the entity was invalid*/
+
+	return 1;
+}
+
+void FreeQueries( bool bForce = false )
+{
+	if (m_vCallbacks.size() == 0 || !sv_lua)
+		return;
+
+	for (unsigned int i = 0;i < m_vCallbacks.size();i++)
+	{
+		if (bForce == true || m_vCallbacks[i].flExpire < gpGlobals->curtime)
+		{
+			Warning( "Unhandled callback freed and deleted %d\n", m_vCallbacks[i].iCookie );
+			sv_lua->ReferenceFree( m_vCallbacks[i].iCallback ); // Free the reference
+
+			m_vCallbacks.erase( m_vCallbacks.begin() + i ); // Remove the callback from the vector
+			i = i - 1;
+		}
+	}
+}
+
+void AddLuaFunction()
+{
+	sv_lua = luashared->GetLuaInterface( 1 ); // Get the server lua interface
+
+	if (sv_lua)
+	{
+		sv_lua->CreateMetaTableType( "Player", 9/*TYPE::ENTITY*/ );
+		int iRef = sv_lua->ReferenceCreate(); // Create a reference to the Player meta table
+
+		sv_lua->ReferencePush( iRef ); // Push the reference
+			sv_lua->PushCFunction( QueryConVar ); // Push our function
+			sv_lua->SetField( -2, "QueryConVar" ); // Set the field
+		sv_lua->ReferenceFree( iRef ); // Free the reference
+
+		sv_lua->Pop(); // Pop that shit off the stack
+	}
+}
 
 // useful helper func
 inline bool FStrEq(const char *sz1, const char *sz2)
@@ -112,38 +211,32 @@ CEmptyServerPlugin::~CEmptyServerPlugin()
 //---------------------------------------------------------------------------------
 bool CEmptyServerPlugin::Load(	CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameServerFactory )
 {
-	ConnectTier1Libraries( &interfaceFactory, 1 );
-	ConnectTier2Libraries( &interfaceFactory, 1 );
+	ConnectTier1Libraries( &interfaceFactory, 1 ); // Connect some shit
+	ConnectTier2Libraries( &interfaceFactory, 1 ); // Here, connect some more
 
-	playerinfomanager = (IPlayerInfoManager *)gameServerFactory(INTERFACEVERSION_PLAYERINFOMANAGER,NULL);
-	if ( !playerinfomanager )
-	{
-		Warning( "Unable to load playerinfomanager, ignoring\n" ); // this isn't fatal, we just won't be able to access specific player data
-	}
-
-	botmanager = (IBotManager *)gameServerFactory(INTERFACEVERSION_PLAYERBOTMANAGER, NULL);
-	if ( !botmanager )
-	{
-		Warning( "Unable to load botcontroller, ignoring\n" ); // this isn't fatal, we just won't be able to access specific bot functions
-	}
-	engine = (IVEngineServer*)interfaceFactory(INTERFACEVERSION_VENGINESERVER, NULL);
-	gameeventmanager = (IGameEventManager *)interfaceFactory(INTERFACEVERSION_GAMEEVENTSMANAGER,NULL);
-	helpers = (IServerPluginHelpers*)interfaceFactory(INTERFACEVERSION_ISERVERPLUGINHELPERS, NULL);
-	enginetrace = (IEngineTrace *)interfaceFactory(INTERFACEVERSION_ENGINETRACE_SERVER,NULL);
-	randomStr = (IUniformRandomStream *)interfaceFactory(VENGINE_SERVER_RANDOM_INTERFACE_VERSION, NULL);
-
-	// get the interfaces we want to use
-	if(	! ( engine && gameeventmanager && g_pFullFileSystem && helpers && enginetrace && randomStr ) )
-	{
-		return false; // we require all these interface to function
-	}
+	engine = (IVEngineServer*)interfaceFactory(INTERFACEVERSION_VENGINESERVER, NULL); // Get our server engine interface
+	helpers = (IServerPluginHelpers*)interfaceFactory(INTERFACEVERSION_ISERVERPLUGINHELPERS, NULL); // Get our helper interface (we can't call queries using the engine interface)
+	playerinfomanager = (IPlayerInfoManager *)gameServerFactory(INTERFACEVERSION_PLAYERINFOMANAGER,NULL); // Get our playerinfomanager for globals
 
 	if ( playerinfomanager )
 	{
 		gpGlobals = playerinfomanager->GetGlobalVars();
 	}
 
-	MathLib_Init( 2.2f, 2.2f, 0.0f, 2.0f );
+	CreateInterfaceFn LuaFactory = Sys_GetFactory( "lua_shared.dll" ); // Get the CreateInterface from lua_shared so we can get the CLuaShared interface
+
+	luashared = (CLuaShared*)LuaFactory( "LUASHARED003", NULL ); // Get the CLuaShared interface
+	
+	if(	!( engine && helpers && luashared && playerinfomanager && gpGlobals ) ) // Make sure we have all of our interfaces and functions
+	{
+		return false; // Make the loading fail
+	}
+
+	AddLuaFunction(); // Try to add our lua function
+
+	Msg( "[ConVar Query loaded!]\n" ); // Tell the server we loaded
+
+	MathLib_Init( 2.2f, 2.2f, 0.0f, 2.0f ); // Initialize our math library even though it's unused
 	ConVar_Register( 0 );
 	return true;
 }
@@ -153,7 +246,20 @@ bool CEmptyServerPlugin::Load(	CreateInterfaceFn interfaceFactory, CreateInterfa
 //---------------------------------------------------------------------------------
 void CEmptyServerPlugin::Unload( void )
 {
-	gameeventmanager->RemoveListener( this ); // make sure we are unloaded from the event system
+	m_vCallbacks.clear();
+
+	if ( sv_lua )
+	{
+		sv_lua->CreateMetaTableType( "Player", 9/*TYPE::ENTITY*/ );
+		int iRef = sv_lua->ReferenceCreate(); // Get our meta table reference
+
+		sv_lua->ReferencePush( iRef ); // Push the reference onto the stack
+			sv_lua->PushNil(); // Push nil
+			sv_lua->SetField( -2, "QueryConVar" ); // Remove  the function
+		sv_lua->ReferenceFree( iRef ); // Free the ference
+
+		sv_lua->Pop(); // Pop shit off the stack
+	}
 
 	ConVar_Unregister( );
 	DisconnectTier2Libraries( );
@@ -179,7 +285,7 @@ void CEmptyServerPlugin::UnPause( void )
 //---------------------------------------------------------------------------------
 const char *CEmptyServerPlugin::GetPluginDescription( void )
 {
-	return "Emtpy-Plugin, Valve";
+	return "For querying ConVars on clients.";
 }
 
 //---------------------------------------------------------------------------------
@@ -187,8 +293,7 @@ const char *CEmptyServerPlugin::GetPluginDescription( void )
 //---------------------------------------------------------------------------------
 void CEmptyServerPlugin::LevelInit( char const *pMapName )
 {
-	Msg( "Level \"%s\" has been loaded\n", pMapName );
-	gameeventmanager->AddListener( this, true );
+
 }
 
 //---------------------------------------------------------------------------------
@@ -197,6 +302,7 @@ void CEmptyServerPlugin::LevelInit( char const *pMapName )
 //---------------------------------------------------------------------------------
 void CEmptyServerPlugin::ServerActivate( edict_t *pEdictList, int edictCount, int clientMax )
 {
+	AddLuaFunction(); // Add our lua function
 }
 
 //---------------------------------------------------------------------------------
@@ -204,10 +310,14 @@ void CEmptyServerPlugin::ServerActivate( edict_t *pEdictList, int edictCount, in
 //---------------------------------------------------------------------------------
 void CEmptyServerPlugin::GameFrame( bool simulating )
 {
-	if ( simulating )
-	{
-		Bot_RunAll();
-	}
+	static float flNextCheck = gpGlobals->curtime + 5.0;
+
+	if (flNextCheck > gpGlobals->curtime)
+		return;
+
+	FreeQueries();
+
+	flNextCheck = gpGlobals->curtime + 1.0;
 }
 
 //---------------------------------------------------------------------------------
@@ -215,7 +325,7 @@ void CEmptyServerPlugin::GameFrame( bool simulating )
 //---------------------------------------------------------------------------------
 void CEmptyServerPlugin::LevelShutdown( void ) // !!!!this can get called multiple times per map change
 {
-	gameeventmanager->RemoveListener( this );
+	FreeQueries( true );
 }
 
 //---------------------------------------------------------------------------------
@@ -237,14 +347,7 @@ void CEmptyServerPlugin::ClientDisconnect( edict_t *pEntity )
 //---------------------------------------------------------------------------------
 void CEmptyServerPlugin::ClientPutInServer( edict_t *pEntity, char const *playername )
 {
-	KeyValues *kv = new KeyValues( "msg" );
-	kv->SetString( "title", "Hello" );
-	kv->SetString( "msg", "Hello there" );
-	kv->SetColor( "color", Color( 255, 0, 0, 255 ));
-	kv->SetInt( "level", 5);
-	kv->SetInt( "time", 10);
-	helpers->CreateMessage( pEntity, DIALOG_MSG, kv, this );
-	kv->deleteThis();
+	
 }
 
 //---------------------------------------------------------------------------------
@@ -271,21 +374,7 @@ void ClientPrint( edict_t *pEdict, char *format, ... )
 //---------------------------------------------------------------------------------
 void CEmptyServerPlugin::ClientSettingsChanged( edict_t *pEdict )
 {
-	if ( playerinfomanager )
-	{
-		IPlayerInfo *playerinfo = playerinfomanager->GetPlayerInfo( pEdict );
-
-		const char * name = engine->GetClientConVarValue( engine->IndexOfEdict(pEdict), "name" );
-
-		if ( playerinfo && name && playerinfo->GetName() && 
-			 Q_stricmp( name, playerinfo->GetName()) ) // playerinfo may be NULL if the MOD doesn't support access to player data 
-													   // OR if you are accessing the player before they are fully connected
-		{
-			ClientPrint( pEdict, "Your name changed to \"%s\" (from \"%s\"\n", name, playerinfo->GetName() );
-						// this is the bad way to check this, the better option it to listen for the "player_changename" event in FireGameEvent()
-						// this is here to give a real example of how to use the playerinfo interface
-		}
-	}
+	
 }
 
 //---------------------------------------------------------------------------------
@@ -296,154 +385,53 @@ PLUGIN_RESULT CEmptyServerPlugin::ClientConnect( bool *bAllowConnect, edict_t *p
 	return PLUGIN_CONTINUE;
 }
 
-CON_COMMAND( DoAskConnect, "Server plugin example of using the ask connect dialog" )
-{
-	if ( args.ArgC() < 2 )
-	{
-		Warning ( "DoAskConnect <server IP>\n" );
-	}
-	else
-	{
-		const char *pServerIP = args.Arg( 1 );
-
-		KeyValues *kv = new KeyValues( "menu" );
-		kv->SetString( "title", pServerIP );	// The IP address of the server to connect to goes in the "title" field.
-		kv->SetInt( "time", 3 );
-
-		for ( int i=1; i < gpGlobals->maxClients; i++ )
-		{
-			edict_t *pEdict = engine->PEntityOfEntIndex( i );
-			if ( pEdict )
-			{
-				helpers->CreateMessage( pEdict, DIALOG_ASKCONNECT, kv, &g_EmtpyServerPlugin );
-			}
-		}
-
-		kv->deleteThis();
-	}
-}
-
 //---------------------------------------------------------------------------------
 // Purpose: called when a client types in a command (only a subset of commands however, not CON_COMMAND's)
 //---------------------------------------------------------------------------------
 PLUGIN_RESULT CEmptyServerPlugin::ClientCommand( edict_t *pEntity, const CCommand &args )
 {
-	const char *pcmd = args[0];
-
-	if ( !pEntity || pEntity->IsFree() ) 
-	{
-		return PLUGIN_CONTINUE;
-	}
-
-	if ( FStrEq( pcmd, "menu" ) )
-	{
-		KeyValues *kv = new KeyValues( "menu" );
-		kv->SetString( "title", "You've got options, hit ESC" );
-		kv->SetInt( "level", 1 );
-		kv->SetColor( "color", Color( 255, 0, 0, 255 ));
-		kv->SetInt( "time", 20 );
-		kv->SetString( "msg", "Pick an option\nOr don't." );
-		
-		for( int i = 1; i < 9; i++ )
-		{
-			char num[10], msg[10], cmd[10];
-			Q_snprintf( num, sizeof(num), "%i", i );
-			Q_snprintf( msg, sizeof(msg), "Option %i", i );
-			Q_snprintf( cmd, sizeof(cmd), "option%i", i );
-
-			KeyValues *item1 = kv->FindKey( num, true );
-			item1->SetString( "msg", msg );
-			item1->SetString( "command", cmd );
-		}
-
-		helpers->CreateMessage( pEntity, DIALOG_MENU, kv, this );
-		kv->deleteThis();
-		return PLUGIN_STOP; // we handled this function
-	}
-	else if ( FStrEq( pcmd, "rich" ) )
-	{
-		KeyValues *kv = new KeyValues( "menu" );
-		kv->SetString( "title", "A rich message" );
-		kv->SetInt( "level", 1 );
-		kv->SetInt( "time", 20 );
-		kv->SetString( "msg", "This is a long long long text string.\n\nIt also has line breaks." );
-		
-		helpers->CreateMessage( pEntity, DIALOG_TEXT, kv, this );
-		kv->deleteThis();
-		return PLUGIN_STOP; // we handled this function
-	}
-	else if ( FStrEq( pcmd, "msg" ) )
-	{
-		KeyValues *kv = new KeyValues( "menu" );
-		kv->SetString( "title", "Just a simple hello" );
-		kv->SetInt( "level", 1 );
-		kv->SetInt( "time", 20 );
-		
-		helpers->CreateMessage( pEntity, DIALOG_MSG, kv, this );
-		kv->deleteThis();
-		return PLUGIN_STOP; // we handled this function
-	}
-	else if ( FStrEq( pcmd, "entry" ) )
-	{
-		KeyValues *kv = new KeyValues( "entry" );
-		kv->SetString( "title", "Stuff" );
-		kv->SetString( "msg", "Enter something" );
-		kv->SetString( "command", "say" ); // anything they enter into the dialog turns into a say command
-		kv->SetInt( "level", 1 );
-		kv->SetInt( "time", 20 );
-		
-		helpers->CreateMessage( pEntity, DIALOG_ENTRY, kv, this );
-		kv->deleteThis();
-		return PLUGIN_STOP; // we handled this function		
-	}
 	return PLUGIN_CONTINUE;
 }
 
-//---------------------------------------------------------------------------------
-// Purpose: called when a client is authenticated
-//---------------------------------------------------------------------------------
 PLUGIN_RESULT CEmptyServerPlugin::NetworkIDValidated( const char *pszUserName, const char *pszNetworkID )
 {
 	return PLUGIN_CONTINUE;
 }
 
-//---------------------------------------------------------------------------------
-// Purpose: called when a cvar value query is finished
-//---------------------------------------------------------------------------------
 void CEmptyServerPlugin::OnQueryCvarValueFinished( QueryCvarCookie_t iCookie, edict_t *pPlayerEntity, EQueryCvarValueStatus eStatus, const char *pCvarName, const char *pCvarValue )
 {
-	Msg( "Cvar query (cookie: %d, status: %d) - name: %s, value: %s\n", iCookie, eStatus, pCvarName, pCvarValue );
+	if (m_vCallbacks.size() == 0)
+		return;
+
+	for ( unsigned int i = 0; i < m_vCallbacks.size(); i++ ) // Go through all our callbacks
+	{
+		if (m_vCallbacks[i].iCookie == iCookie) // Check the cookie to see if it matches the one we're looking for
+		{
+			sv_lua->ReferencePush( m_vCallbacks[i].iCallback ); // Push the reference to the function on the stack
+				if (eStatus == eQueryCvarValueStatus_ValueIntact) // If the query succeeded and nothing went wrong, then proceed
+					sv_lua->PushString( pCvarValue ); // Push the value of the convar
+				else
+					sv_lua->PushNumber( eStatus ); // Push the number of the error
+				sv_lua->Call( 1, 0 ); // Call the function
+			sv_lua->ReferenceFree( m_vCallbacks[i].iCallback ); // Free the reference
+			
+			m_vCallbacks.erase( m_vCallbacks.begin() + i ); // Remove the callback from the vector
+
+			break;
+		}
+	}
 }
+
 void CEmptyServerPlugin::OnEdictAllocated( edict_t *edict )
 {
 }
+
 void CEmptyServerPlugin::OnEdictFreed( const edict_t *edict  )
 {
 }
 
-//---------------------------------------------------------------------------------
-// Purpose: called when an event is fired
-//---------------------------------------------------------------------------------
 void CEmptyServerPlugin::FireGameEvent( KeyValues * event )
 {
-	const char * name = event->GetName();
-	Msg( "CEmptyServerPlugin::FireGameEvent: Got event \"%s\"\n", name );
 }
 
-//---------------------------------------------------------------------------------
-// Purpose: an example of how to implement a new command
-//---------------------------------------------------------------------------------
-CON_COMMAND( empty_version, "prints the version of the empty plugin" )
-{
-	Msg( "Version:2.0.0.0\n" );
-}
-
-CON_COMMAND( empty_log, "logs the version of the empty plugin" )
-{
-	engine->LogPrint( "Version:2.0.0.0\n" );
-}
-
-//---------------------------------------------------------------------------------
-// Purpose: an example cvar
-//---------------------------------------------------------------------------------
-static ConVar empty_cvar("plugin_empty", "0", 0, "Example plugin cvar");
+static ConVar convar_query( "convar_query", "1.0.0", 0, "Version of convar query you're using." );
